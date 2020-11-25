@@ -1,0 +1,228 @@
+<html>
+<head>
+<title>vtt to txt converter</title>
+
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="stylesheet" href="styles.css">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Raleway">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+<style>
+body,h1,h2,h3,h4,h5,h6 {font-family: "Raleway", sans-serif}
+
+body, html {
+  height: 100%;
+  line-height: 1.8;
+}
+
+/* Full height image header */
+.bgimg-1 {
+  background-position: center;
+  background-size: cover;
+  background-image: url("/w3images/mac.jpg");
+  min-height: 100%;
+}
+
+.w3-bar .w3-button {
+  padding: 16px;
+}
+</style>
+
+<script type="text/javascript">
+
+function myFunction(event){
+	var input = event.target;
+	
+	var inputFile = input.files[0].name;
+	
+	var fileLength = inputFile.length;
+	
+	var filename = document.getElementById("fileName")
+	filename.value = inputFile.substring(0,fileLength-4)
+
+	var reader = new FileReader();
+	reader.onload = function(){
+	  var text = reader.result;
+	  var node = document.getElementById('inputData');
+	  node.value = text;
+	  
+	};
+	reader.readAsText(input.files[0]);
+  };
+  
+function cleanVTT(){
+var input = document.getElementById("inputData").value
+
+
+var output = input.replace(/NOTE Confidence: [0-9].[0-9]*/g,"")
+
+output = output.replace(/[a-z0-9]*-[a-z0-9]*-[a-z0-9]*-[a-z0-9]*-[a-z0-9]*/g,"")
+output = output.replace(/.[0-9]* --> [0-9]*:[0-9]*:[0-9]*.[0-9]*/g,"   ")
+output = output.replace(/(NOTE .*)/g,"")
+output = output.replace(/WEBVTT/,"")
+output = output.replace(/\n\s/g,"")
+output = output.replace(/\n(\D)/g," $1")
+
+var outputElement = document.getElementById("output")
+var filename = document.getElementById("fileName").value;
+
+var outputTypes = document.getElementsByName('outputType');
+var outputType;
+for(var i = 0; i < outputTypes.length; i++){
+    if(outputTypes[i].checked){
+        outputType = outputTypes[i].value;
+    }
+}
+
+
+outputElement.value = output
+
+download(outputType, filename);
+}
+
+
+function download(type, file) {
+	
+	
+	var filename = file + ".txt";
+	var input = document.getElementById("output").value
+	var element = document.createElement('a');
+	element.setAttribute('href', 'data:text/plain;charset=utf-8,' + encodeURIComponent(input));
+	element.setAttribute('download', filename);
+
+	element.style.display = 'none';
+	document.body.appendChild(element);
+
+	element.click();
+
+	document.body.removeChild(element);
+}
+</script>
+</head>
+<body >
+
+<!-- Navbar (sit on top) -->
+<div class="w3-top">
+  <div class="w3-bar w3-white w3-card" id="myNavbar">
+    
+    <!-- Right-sided navbar links -->
+    <div class="w3-right w3-hide-small">
+      
+      <a href="#contact" class="w3-bar-item w3-button"><i class="fa fa-envelope"></i> INFO</a>
+    </div>
+    <!-- Hide right-floated links on small screens and replace them with a menu icon -->
+
+    <a href="javascript:void(0)" class="w3-bar-item w3-button w3-right w3-hide-large w3-hide-medium" onclick="w3_open()">
+      <i class="fa fa-bars"></i>
+    </a>
+  </div>
+</div>
+
+<nav class="w3-sidebar w3-bar-block w3-black w3-card w3-animate-left w3-hide-medium w3-hide-large" style="display:none" id="mySidebar">
+  <a href="javascript:void(0)" onclick="w3_close()" class="w3-bar-item w3-button w3-large w3-padding-16">Close ×</a>
+ 
+  <a href="#contact" onclick="w3_close()" class="w3-bar-item w3-button">CONTACT</a>
+</nav>
+
+<div class="w3-container" style="padding:128px 16px" id="about">
+  <h3 class="w3-center">VTT Converter</h3>
+
+<div>
+	<p>This page will convert a WebVtt file into a formatted text file which can be used to import into Atlas.ti or NVivo</p>
+
+	<p>Choose a file from your computer and click "Convert and Download". The file should be a text based file with a .vtt extension. You will then be prompted to download the converted text file</p>
+</div>
+
+<div id="inputelement" style="float:left;">
+
+	<form name="data">
+		<input type="file" id="myFile" multiple size="50" onchange="myFunction(event)">
+
+		<input type="hidden" id="fileName" />
+		<br/>
+
+		
+		
+		<input type="button" onclick="cleanVTT();" value="Convert and Download"/>
+	</form>
+</div>
+
+
+<div id="inputDiv" style="visibility: hidden;">
+	<p>Input</p>
+	<textarea id="inputData" name="inputData"  >
+		</textarea>	
+</div>
+
+<div id="outputDiv" style="visibility: hidden;">
+	<p>Output</p>
+	<textarea id="output" >
+	</textarea>
+</div>
+
+</div>
+
+<footer>
+<!-- Contact Section -->
+<div class="w3-container w3-light-grey" style="padding:128px 16px" id="contact">
+  <h3 class="w3-center">INFO</h3>
+  <div style="margin-top:48px">
+   <p><i class="fa fa-map-marker fa-fw w3-xxlarge w3-margin-right"></i> Lancaster, UK</p>
+   <p><i class="fa fa-twitter fa-fw w3-xxlarge w3-margin-right"></i> @sillytim</p>
+   <p><i class="fa fa-envelope fa-fw w3-xxlarge w3-margin-right"> </i> t.ellis@lancaster.ac.uk</p>
+   <p>MIT License</p>
+
+<p>Copyright (c) 2020 Tim Ellis</p>
+
+<p>Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:</p>
+
+<p>The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.</p>
+
+<p>THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.</p>
+    
+  </div>
+</div>
+
+
+</footer>
+
+
+<script>
+// Modal Image Gallery
+function onClick(element) {
+  document.getElementById("img01").src = element.src;
+  document.getElementById("modal01").style.display = "block";
+  var captionText = document.getElementById("caption");
+  captionText.innerHTML = element.alt;
+}
+
+
+// Toggle between showing and hiding the sidebar when clicking the menu icon
+var mySidebar = document.getElementById("mySidebar");
+
+function w3_open() {
+  if (mySidebar.style.display === 'block') {
+    mySidebar.style.display = 'none';
+  } else {
+    mySidebar.style.display = 'block';
+  }
+}
+
+// Close the sidebar with the close button
+function w3_close() {
+    mySidebar.style.display = "none";
+}
+</script>
+</body>
