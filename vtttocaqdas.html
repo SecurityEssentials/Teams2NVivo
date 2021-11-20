@@ -74,10 +74,10 @@ function processInput( input, timeshift ){
         ).replace(/^\n*/, "Timespan\tSpeaker\tContent\n") // Take out initial blank lines, and replace with column headings.
         
         /* Now it gets complicated. We have:
-        00:00:00	Fred	I'm sorry if cat meows
-        00:00:06	Fred	Uh.
+            00:00:00	Fred	I'm sorry if cat meows
+            00:00:06	Fred	Uh.
         And we want:
-        00:00:00	Fred	I'm sorry if cat meows---Uh.
+            00:00:00	Fred	I'm sorry if cat meows---Uh.
         So we do a complicated substitution, and to handle more than 2 in a row, we keep doing it until no more matches are found. */
 
         do {
@@ -161,13 +161,15 @@ function checkTimeshift() {
 <div>
 	<p>This page will convert a WebVtt transcript file from Microsoft Teams or Zoom into a formatted text file to import into Atlas.ti or NVivo</p>
 
-	<p>Choose a file from your computer using Choose file. The file should be a text based file with a .vtt extension. Then click Convert and Download to create the converted text file</p>
+	<p>Choose a file from your computer using Choose file. The file should be a text based file with a .vtt extension.
+        Enter a time shift value in seconds to add to each timestamp (typically -10 or so).
+        Then click Convert and Download to create the converted .txt file</p>
 </div>
 
 <div id="interactions"> <!--style="float:left;"-->
 
 	<form name="data">
-		<input type="file" id="myFile" single size="50" onchange="fileChosenEvent(event)">
+		<input type="file" id="myFile" single size="50" accept=".vtt" onchange="fileChosenEvent(event)">
 
 		<input type="hidden" id="fileName" />
 		<br/>
