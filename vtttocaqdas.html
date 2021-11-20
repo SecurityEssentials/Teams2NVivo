@@ -1,44 +1,35 @@
+<!-- Single web page implementation of a VTT Transcript Converter -->
 <html>
 <head>
-<title>vtt to txt converter</title>
+<title>Teams and Zoom Transcript Converter</title>
 
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<link rel="stylesheet" href="styles.css">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Raleway">
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+
+<!-- ****************************************** Stylesheet *********************************************** -->
+
 <style>
-body,h1,h2,h3,h4,h5,h6 {font-family: "Raleway", sans-serif}
 
-body, html {
-  height: 100%;
-  line-height: 1.8;
+footer {
+    font-style: italic;
 }
 
-/* Full height image header */
-.bgimg-1 {
-  background-position: center;
-  background-size: cover;
-  background-image: url("/w3images/mac.jpg");
-  min-height: 100%;
-}
-
-.w3-bar .w3-button {
-  padding: 16px;
+#interactions {
+    line-height: 2.5;
 }
 </style>
 
+<!-- ****************************************** Javascript *********************************************** -->
+
 <script type="text/javascript">
 
-function myFunction(event){
+function fileChosenEvent(event){
 	var input = event.target;
 	
 	var inputFile = input.files[0].name;
 	
-	var fileLength = inputFile.length;
-	
 	var filename = document.getElementById("fileName")
-	filename.value = inputFile.substring(0,fileLength-4)
+	filename.value = inputFile
 
 	var reader = new FileReader();
 	reader.onload = function(){
@@ -48,43 +39,97 @@ function myFunction(event){
 	  
 	};
 	reader.readAsText(input.files[0]);
+ 
+    checkTimeshift()
   };
   
+function processInput( input, timeshift ){
+    // Does the conversion, adding timeshift to each timestamp (may be negative)
+    /* Input:
+        WEBVTT
+        NOTE stuff etc.
+
+        00:00:00.000 --> 00:00:06.110
+        <v Fred>I'm sorry if cats meows happened throughout this. </v>
+
+        00:00:06.820 --> 00:00:07.390
+        <v Fred>Uh.</v>
+
+        00:00:08.070 --> 00:00:08.620
+        <v Joe>Right?</v>
+        
+    Output:
+        Timespan    Speaker Content
+        00:00:00    Fred    I'm sorry if cats meows happened throughout this. ---Uh.
+        00:00:08    Joe Right?
+    */
+    
+    var output=input.replace(
+        /[a-z0-9]*-[a-z0-9]*-[a-z0-9]*-[a-z0-9]*-[a-z0-9]*/g,""  // Weird IDs go.
+        ).replace(/.[0-9]* --> [0-9]*:[0-9]*:[0-9]*.[0-9]*/g,"   " // All but the start of each timestamp line goes.
+        ).replace(/(NOTE .*)/g,""  // Removes notes.
+        ).replace(/WEBVTT/,"" // Removes intro line.
+        ).replace(/\s*\n\<v (.*?)>/g, "\t$1\t" // Timestamp to speaker name is tab separated.
+        ).replace(/\<\/v\>\n/g, ""   // Terminating </v> and following blank line gone.
+        ).replace(/^\n*/, "Timespan\tSpeaker\tContent\n") // Take out initial blank lines, and replace with column headings.
+        
+        /* Now it gets complicated. We have:
+        00:00:00	Fred	I'm sorry if cat meows
+        00:00:06	Fred	Uh.
+        And we want:
+        00:00:00	Fred	I'm sorry if cat meows---Uh.
+        So we do a complicated substitution, and to handle more than 2 in a row, we keep doing it until no more matches are found. */
+
+        do {
+            var latestVersion=output,
+            output=latestVersion.replace(/(?<time>\d\d:\d\d:\d\d)\t(?<speaker>.*?)\t(?<text>.*?)\n\d\d:\d\d:\d\d\t(\k<speaker>\t)/g,
+                                        "$<time>\t$<speaker>\t$<text>---")
+        } while (! (latestVersion===output))
+        
+
+        /* And shift all the timestamps: */
+        
+        output=output.replace(/\d\d:\d\d:\d\d\t/g, (e) => {
+            let hms=e.split(':');
+            let seconds = parseInt(hms[0]) * 3600 + parseInt(hms[1]) * 60 + parseInt(hms[2]);
+            seconds += timeshift;
+            // ~~ forces integer arithmetic. PadStart zero-pads the string.
+            let timestamp = seconds < 0 ? "--:--:--" : // Mark negative timestamps for removal.
+                                (~~(seconds / 3600)).toString().padStart(2,'0') + ':' +
+                                (~~((seconds % 3600) / 60)).toString().padStart(2,'0') + ':' +
+                                (seconds % 60).toString().padStart(2,'0');
+            return timestamp + '\t';
+            })
+        
+        // Remove those negative timestamps:
+        output=output.replace(/--:--:--\t.*\n/g,"")
+        
+        /* And we need also to check for duplicate timestamps, which NVivo rejects
+        00:00:00	Fred	I'm sorry if cat meows
+        00:00:00	Jim Don't be
+        Put .5 after the second timestamp. Won't handle triples, but they're unlikely. */
+        
+        output=output.replace(/(?<time>\d\d:\d\d:\d\d)\t(?<rest>.*?)\n\k<time>\t/g,"$<time>\t$<rest>\n$<time>.5\t")
+                
+        return output;
+}
+
 function cleanVTT(){
-var input = document.getElementById("inputData").value
+    var input = document.getElementById("inputData").value
 
+    var outputElement = document.getElementById("output")
+    var filename = document.getElementById("fileName").value;
+    var timeshift = parseInt(document.getElementById("timeshift").value);
 
-var output = input.replace(/NOTE Confidence: [0-9].[0-9]*/g,"")
+    outputElement.value = processInput( input, timeshift )
 
-output = output.replace(/[a-z0-9]*-[a-z0-9]*-[a-z0-9]*-[a-z0-9]*-[a-z0-9]*/g,"")
-output = output.replace(/.[0-9]* --> [0-9]*:[0-9]*:[0-9]*.[0-9]*/g,"   ")
-output = output.replace(/(NOTE .*)/g,"")
-output = output.replace(/WEBVTT/,"")
-output = output.replace(/\n\s/g,"")
-output = output.replace(/\n(\D)/g," $1")
-
-var outputElement = document.getElementById("output")
-var filename = document.getElementById("fileName").value;
-
-var outputTypes = document.getElementsByName('outputType');
-var outputType;
-for(var i = 0; i < outputTypes.length; i++){
-    if(outputTypes[i].checked){
-        outputType = outputTypes[i].value;
-    }
+    download(filename);
 }
 
 
-outputElement.value = output
-
-download(outputType, filename);
-}
-
-
-function download(type, file) {
-	
-	
-	var filename = file + ".txt";
+function download(filename) {
+    // Saves the contents of element 'output' to file filename, replacing its extension with .txt
+	filename = filename.replace(/.vtt$/, ".txt");
 	var input = document.getElementById("output").value
 	var element = document.createElement('a');
 	element.setAttribute('href', 'data:text/plain;charset=utf-8,' + encodeURIComponent(input));
@@ -97,82 +142,59 @@ function download(type, file) {
 
 	document.body.removeChild(element);
 }
+
+function checkTimeshift() {
+    // Disables the Convert and Download button if the timeshift is invalid.
+    document.getElementById("doConvert").disabled = ! document.getElementById("timeshift").value.match( /^-?\d+$/ )
+    }
+    
 </script>
 </head>
+<!-- ****************************************** HTML body *********************************************** -->
+
 <body >
+<!-- Converter symbol in SVG -->
+<img src="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTUiIGhlaWdodD0iMTUiIHZpZXdCb3g9IjAgMCAxNSAxNSIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KICAgIDxwYXRoIGQ9Ik03LjA5Mzc1IDEuNDA2MjVDNy4wOTM3NSAxLjYyOTY5IDcuMjc2NTYgMS44MTI1IDcuNSAxLjgxMjVDOS4wMjM0NCAxLjgxMjUgMTAuNDQ1MyAyLjQwMTU2IDExLjUyMTkgMy40NzgxMkMxMi41OTg0IDQuNTU0NjkgMTMuMTg3NSA1Ljk3NjU2IDEzLjE4NzUgNy41QzEzLjE4NzUgOS4wMDMxMyAxMi42MTg4IDEwLjQwNDcgMTEuNTYyNSAxMS40ODEyVjEwLjM0MzhDMTEuNTYyNSAxMC4xMjAzIDExLjM3OTcgOS45Mzc1IDExLjE1NjIgOS45Mzc1QzEwLjkzMjggOS45Mzc1IDEwLjc1IDEwLjEyMDMgMTAuNzUgMTAuMzQzOFYxMi43ODEySDEzLjE4NzVDMTMuNDEwOSAxMi43ODEyIDEzLjU5MzggMTIuNTk4NCAxMy41OTM4IDEyLjM3NUMxMy41OTM4IDEyLjE1MTYgMTMuNDEwOSAxMS45Njg4IDEzLjE4NzUgMTEuOTY4OEgxMi4yMTI1QzEzLjM3MDMgMTAuNzUgMTQgOS4xODU5NCAxNCA3LjVDMTQgNS43NzM0NCAxMy4zMjk3IDQuMTI4MTIgMTIuMDkwNiAyLjkwOTM3QzEwLjg3MTkgMS42NzAzMSA5LjIyNjU2IDEgNy41IDFDNy4yNzY1NiAxIDcuMDkzNzUgMS4xODI4MSA3LjA5Mzc1IDEuNDA2MjVaIiBmaWxsPSIjMjgzOTUyIiBzdHJva2U9IiMyODM5NTIiLz4KICAgIDxwYXRoIGQ9Ik0yLjkwOTM3IDEyLjA5MDZDNC4xMjgxMiAxMy4zMDk0IDUuNzczNDQgMTQgNy41IDE0QzcuNzIzNDQgMTQgNy45MDYyNSAxMy44MTcyIDcuOTA2MjUgMTMuNTkzOEM3LjkwNjI1IDEzLjM3MDMgNy43MjM0NCAxMy4xODc1IDcuNSAxMy4xODc1QzUuOTc2NTYgMTMuMTg3NSA0LjU1NDY5IDEyLjU5ODQgMy40NzgxMiAxMS41MjE5QzIuNDAxNTYgMTAuNDQ1MyAxLjgxMjUgOS4wMjM0NCAxLjgxMjUgNy41QzEuODEyNSA1Ljk5Njg4IDIuMzgxMjUgNC41OTUzMSAzLjQzNzUgMy41MTg3NVY0LjY1NjI1QzMuNDM3NSA0Ljg3OTY5IDMuNjIwMzEgNS4wNjI1IDMuODQzNzUgNS4wNjI1QzQuMDY3MTkgNS4wNjI1IDQuMjUgNC44Nzk2OSA0LjI1IDQuNjU2MjVWMi4yMTg3NUgxLjgxMjVDMS41ODkwNiAyLjIxODc1IDEuNDA2MjUgMi40MDE1NiAxLjQwNjI1IDIuNjI1QzEuNDA2MjUgMi44NDg0NCAxLjU4OTA2IDMuMDMxMjUgMS44MTI1IDMuMDMxMjVIMi43ODc1QzEuNjI5NjkgNC4yNSAxIDUuODE0MDYgMSA3LjVDMSA5LjIyNjU2IDEuNjcwMzEgMTAuODcxOSAyLjkwOTM3IDEyLjA5MDZaIiBmaWxsPSIjMjgzOTUyIiBzdHJva2U9IiMyODM5NTIiLz4KPC9zdmc+Cg==" width="8%" >
 
-<!-- Navbar (sit on top) -->
-<div class="w3-top">
-  <div class="w3-bar w3-white w3-card" id="myNavbar">
-    
-    <!-- Right-sided navbar links -->
-    <div class="w3-right w3-hide-small">
-      
-      <a href="#contact" class="w3-bar-item w3-button"><i class="fa fa-envelope"></i> INFO</a>
-    </div>
-    <!-- Hide right-floated links on small screens and replace them with a menu icon -->
-
-    <a href="javascript:void(0)" class="w3-bar-item w3-button w3-right w3-hide-large w3-hide-medium" onclick="w3_open()">
-      <i class="fa fa-bars"></i>
-    </a>
-  </div>
-</div>
-
-<nav class="w3-sidebar w3-bar-block w3-black w3-card w3-animate-left w3-hide-medium w3-hide-large" style="display:none" id="mySidebar">
-  <a href="javascript:void(0)" onclick="w3_close()" class="w3-bar-item w3-button w3-large w3-padding-16">Close ×</a>
- 
-  <a href="#contact" onclick="w3_close()" class="w3-bar-item w3-button">CONTACT</a>
-</nav>
-
-<div class="w3-container" style="padding:128px 16px" id="about">
-  <h3 class="w3-center">VTT Converter</h3>
+  <h3>VTT Converter</h3>
 
 <div>
-	<p>This page will convert a WebVtt file into a formatted text file which can be used to import into Atlas.ti or NVivo</p>
+	<p>This page will convert a WebVtt transcript file from Microsoft Teams or Zoom into a formatted text file to import into Atlas.ti or NVivo</p>
 
-	<p>Choose a file from your computer and click "Convert and Download". The file should be a text based file with a .vtt extension. You will then be prompted to download the converted text file</p>
+	<p>Choose a file from your computer using Choose file. The file should be a text based file with a .vtt extension. Then click Convert and Download to create the converted text file</p>
 </div>
 
-<div id="inputelement" style="float:left;">
+<div id="interactions"> <!--style="float:left;"-->
 
 	<form name="data">
-		<input type="file" id="myFile" multiple size="50" onchange="myFunction(event)">
+		<input type="file" id="myFile" single size="50" onchange="fileChosenEvent(event)">
 
 		<input type="hidden" id="fileName" />
 		<br/>
-
-		
-		
-		<input type="button" onclick="cleanVTT();" value="Convert and Download"/>
+        <label for="timeshift">Time shift:</label>
+        <input type="text" id="timeshift" name="timeshift" value=0 onChange="checkTimeshift()">
+		<br/>
+		<input type="button" id="doConvert" onclick="cleanVTT();" value="Convert and Download"/>
 	</form>
 </div>
 
 
-<div id="inputDiv" style="visibility: hidden;">
+<div id="inputDiv" style="display: none;">
 	<p>Input</p>
 	<textarea id="inputData" name="inputData"  >
 		</textarea>	
 </div>
 
-<div id="outputDiv" style="visibility: hidden;">
+<div id="outputDiv" style="display: none;"> <!--style="visibility: hidden;"-->
 	<p>Output</p>
 	<textarea id="output" >
 	</textarea>
 </div>
 
-</div>
+<footer id="footer">
 
-<footer>
-<!-- Contact Section -->
-<div class="w3-container w3-light-grey" style="padding:128px 16px" id="contact">
-  <h3 class="w3-center">INFO</h3>
-  <div style="margin-top:48px">
-   <p><i class="fa fa-map-marker fa-fw w3-xxlarge w3-margin-right"></i> Lancaster, UK</p>
-   <p><i class="fa fa-twitter fa-fw w3-xxlarge w3-margin-right"></i> @sillytim</p>
-   <p><i class="fa fa-envelope fa-fw w3-xxlarge w3-margin-right"> </i> t.ellis@lancaster.ac.uk</p>
-   <p>MIT License</p>
-
-<p>Copyright (c) 2020 Tim Ellis</p>
+<p>Copyright (c) 2021 Charles Weir <br/>
+Portions Copyright (c) 2020 Tim Ellis</p>
 
 <p>Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -197,32 +219,4 @@ SOFTWARE.</p>
 
 
 </footer>
-
-
-<script>
-// Modal Image Gallery
-function onClick(element) {
-  document.getElementById("img01").src = element.src;
-  document.getElementById("modal01").style.display = "block";
-  var captionText = document.getElementById("caption");
-  captionText.innerHTML = element.alt;
-}
-
-
-// Toggle between showing and hiding the sidebar when clicking the menu icon
-var mySidebar = document.getElementById("mySidebar");
-
-function w3_open() {
-  if (mySidebar.style.display === 'block') {
-    mySidebar.style.display = 'none';
-  } else {
-    mySidebar.style.display = 'block';
-  }
-}
-
-// Close the sidebar with the close button
-function w3_close() {
-    mySidebar.style.display = "none";
-}
-</script>
 </body>
