@@ -1,7 +1,7 @@
 <!-- Single web page implementation of a VTT Transcript Converter -->
 <html>
 <head>
-<title>Teams and Zoom Transcript Converter</title>
+<title>Teams and Zoom Transcript Converter for NVivo</title>
 
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -146,7 +146,9 @@ function download(filename) {
 
 function checkTimeshift() {
     // Disables the Convert and Download button if the timeshift is invalid.
-    document.getElementById("doConvert").disabled = ! document.getElementById("timeshift").value.match( /^-?\d+$/ )
+    document.getElementById("doConvert").disabled = !
+        (document.getElementById("timeshift").value.match( /^-?\d+$/ ) &&
+        document.getElementById("fileName").value.length != 0)
     }
     
 </script>
@@ -157,12 +159,12 @@ function checkTimeshift() {
 <!-- Converter symbol in SVG -->
 <img src="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTUiIGhlaWdodD0iMTUiIHZpZXdCb3g9IjAgMCAxNSAxNSIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KICAgIDxwYXRoIGQ9Ik03LjA5Mzc1IDEuNDA2MjVDNy4wOTM3NSAxLjYyOTY5IDcuMjc2NTYgMS44MTI1IDcuNSAxLjgxMjVDOS4wMjM0NCAxLjgxMjUgMTAuNDQ1MyAyLjQwMTU2IDExLjUyMTkgMy40NzgxMkMxMi41OTg0IDQuNTU0NjkgMTMuMTg3NSA1Ljk3NjU2IDEzLjE4NzUgNy41QzEzLjE4NzUgOS4wMDMxMyAxMi42MTg4IDEwLjQwNDcgMTEuNTYyNSAxMS40ODEyVjEwLjM0MzhDMTEuNTYyNSAxMC4xMjAzIDExLjM3OTcgOS45Mzc1IDExLjE1NjIgOS45Mzc1QzEwLjkzMjggOS45Mzc1IDEwLjc1IDEwLjEyMDMgMTAuNzUgMTAuMzQzOFYxMi43ODEySDEzLjE4NzVDMTMuNDEwOSAxMi43ODEyIDEzLjU5MzggMTIuNTk4NCAxMy41OTM4IDEyLjM3NUMxMy41OTM4IDEyLjE1MTYgMTMuNDEwOSAxMS45Njg4IDEzLjE4NzUgMTEuOTY4OEgxMi4yMTI1QzEzLjM3MDMgMTAuNzUgMTQgOS4xODU5NCAxNCA3LjVDMTQgNS43NzM0NCAxMy4zMjk3IDQuMTI4MTIgMTIuMDkwNiAyLjkwOTM3QzEwLjg3MTkgMS42NzAzMSA5LjIyNjU2IDEgNy41IDFDNy4yNzY1NiAxIDcuMDkzNzUgMS4xODI4MSA3LjA5Mzc1IDEuNDA2MjVaIiBmaWxsPSIjMjgzOTUyIiBzdHJva2U9IiMyODM5NTIiLz4KICAgIDxwYXRoIGQ9Ik0yLjkwOTM3IDEyLjA5MDZDNC4xMjgxMiAxMy4zMDk0IDUuNzczNDQgMTQgNy41IDE0QzcuNzIzNDQgMTQgNy45MDYyNSAxMy44MTcyIDcuOTA2MjUgMTMuNTkzOEM3LjkwNjI1IDEzLjM3MDMgNy43MjM0NCAxMy4xODc1IDcuNSAxMy4xODc1QzUuOTc2NTYgMTMuMTg3NSA0LjU1NDY5IDEyLjU5ODQgMy40NzgxMiAxMS41MjE5QzIuNDAxNTYgMTAuNDQ1MyAxLjgxMjUgOS4wMjM0NCAxLjgxMjUgNy41QzEuODEyNSA1Ljk5Njg4IDIuMzgxMjUgNC41OTUzMSAzLjQzNzUgMy41MTg3NVY0LjY1NjI1QzMuNDM3NSA0Ljg3OTY5IDMuNjIwMzEgNS4wNjI1IDMuODQzNzUgNS4wNjI1QzQuMDY3MTkgNS4wNjI1IDQuMjUgNC44Nzk2OSA0LjI1IDQuNjU2MjVWMi4yMTg3NUgxLjgxMjVDMS41ODkwNiAyLjIxODc1IDEuNDA2MjUgMi40MDE1NiAxLjQwNjI1IDIuNjI1QzEuNDA2MjUgMi44NDg0NCAxLjU4OTA2IDMuMDMxMjUgMS44MTI1IDMuMDMxMjVIMi43ODc1QzEuNjI5NjkgNC4yNSAxIDUuODE0MDYgMSA3LjVDMSA5LjIyNjU2IDEuNjcwMzEgMTAuODcxOSAyLjkwOTM3IDEyLjA5MDZaIiBmaWxsPSIjMjgzOTUyIiBzdHJva2U9IiMyODM5NTIiLz4KPC9zdmc+Cg==" width="8%" >
 
-  <h3>VTT Converter</h3>
+  <h3>Transcript Converter</h3>
 
 <div>
-	<p>This page will convert a WebVtt transcript file from Microsoft Teams or Zoom into a formatted text file to import into Atlas.ti or NVivo</p>
+	<p>This page will convert a WebVtt transcript file from Microsoft Teams or Zoom into a formatted text file to import into NVivo</p>
 
-	<p>Choose a file from your computer using Choose file. The file should be a text based file with a .vtt extension.
+	<p>Choose a file from your computer using Choose file. This should be a text based file with a .vtt extension as downloaded from Teams or Zoom.
         You may want to enter a time shift value in seconds to add to each timestamp (typically -10 or so).
         Then click Convert and Download to create the converted .txt file</p>
 </div>
@@ -177,7 +179,7 @@ function checkTimeshift() {
         <label for="timeshift">Time shift:</label>
         <input type="text" id="timeshift" name="timeshift" value=0 onChange="checkTimeshift()">
 		<br/>
-		<input type="button" id="doConvert" onclick="cleanVTT();" value="Convert and Download"/>
+		<input type="button" id="doConvert" onclick="cleanVTT();" disabled value="Convert and Download"/>
 	</form>
 </div>
 
