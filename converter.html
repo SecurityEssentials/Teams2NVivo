@@ -57,11 +57,23 @@ function processInput( input, timeshift ){
 
         00:00:08.070 --> 00:00:08.620
         <v Joe>Right?</v>
-        
+     
     Output:
         Timespan    Speaker Content
         00:00:00    Fred    I'm sorry if cats meows happened throughout this. ---Uh.
         00:00:08    Joe Right?
+        
+    or Zoom:
+        WEBVTT
+
+        1
+        00:00:09.540 --> 00:00:12.990
+        Andrew Knight: We have that setup. Okay.
+
+        3
+        00:00:15.630 --> 00:00:17.760
+        Andrew Knight: It's like Mary Kate's here. I'll let her in.
+
     */
     
     return (input
@@ -71,6 +83,8 @@ function processInput( input, timeshift ){
         .replace(/WEBVTT/,"") // Nulls out intro line.
         // Teams transcript items as above. Convert to tab delimited:
         .replace(/(?<time>\d\d:\d\d:\d\d)\s*?\n<v (?<speaker>.*?)>(?<text>.*?)<\/v>\n/g, "$<time>\t$<speaker>\t$<text>" )
+        // Zoom transcript items:
+        .replace(/\d*?\n(?<time>\d\d:\d\d:\d\d)\s*?\n(?<speaker>.*?): (?<text>.*?)\n/g, "$<time>\t$<speaker>\t$<text>" )
         .replace(/^\n*/, "Timespan\tSpeaker\tContent\n") // Take out initial blank lines, and replace with column headings.
         
         /* Now it gets complicated. We have:

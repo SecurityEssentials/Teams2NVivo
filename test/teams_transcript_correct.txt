@@ -1,0 +1,11 @@
+Timespan	Speaker	Content
+00:00:00	Speaker, First (Student)	Lorem ipsum dolor sit amet, consectetur adipiscing elit. Proin hendrerit varius luctus. ---Ah.
+00:00:08	Interviewer, First	OK?
+00:00:08.5	Speaker, First (Student)	Aliquam finibus massa vel nunc porta egestas. 
+00:00:10	Interviewer, First	Integer in urna ut sapien porttitor lacinia. N
+00:00:11	Speaker, First (Student)	Unc sapien sem, sollicitudin eget interdum dignissim.---Yes.---Yeah.
+00:00:15	Interviewer, First	Oh, good heavens, it's transcribing. It's not supposed to do that.
+00:00:18	Speaker, First (Student)	Isn't it clever?
+00:00:20	Interviewer, First	That is incredibly clever.
+00:00:22	Speaker, First (Student)	Rutrum vel orci. Vivamus ut vehicula nulla. Sed a ligula non dolor maximus congue. Donec nec suscipit magna. Maecenas pellentesque enim eu gravida mattis. Nunc ut fermentum est. Aenean eu nibh hendrerit, tristique lorem at, elementum urna. Pellentesque ornare eros et dolor tempor interdum. Nullam dignissim est suscipit metus consectetur lobortis..
+00:00:36	Interviewer, First	Oh, right.
