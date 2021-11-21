@@ -67,10 +67,10 @@ function processInput( input, timeshift ){
     return (input
         .replace( /[a-z0-9]*-[a-z0-9]*-[a-z0-9]*-[a-z0-9]*-[a-z0-9]*/g,"") // Weird IDs go.
         .replace(/.[0-9]* --> [0-9]*:[0-9]*:[0-9]*.[0-9]*/g,"   ") // All but the start of each timestamp line goes.
-        .replace(/(NOTE .*)/g,"")  // Removes notes.
-        .replace(/WEBVTT/,"") // Removes intro line.
-        .replace(/\s*\n\<v (.*?)>/g, "\t$1\t") // Timestamp to speaker name is tab separated.
-        .replace(/\<\/v\>\n/g, "")  // Terminating </v> and following blank line gone.
+        .replace(/NOTE .*?\n/g,"")  // Removes notes.
+        .replace(/WEBVTT/,"") // Nulls out intro line.
+        // Teams transcript items as above. Convert to tab delimited:
+        .replace(/(?<time>\d\d:\d\d:\d\d)\s*?\n<v (?<speaker>.*?)>(?<text>.*?)<\/v>\n/g, "$<time>\t$<speaker>\t$<text>" )
         .replace(/^\n*/, "Timespan\tSpeaker\tContent\n") // Take out initial blank lines, and replace with column headings.
         
         /* Now it gets complicated. We have:
