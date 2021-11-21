@@ -64,37 +64,38 @@ function processInput( input, timeshift ){
         00:00:08    Joe Right?
     */
     
-    var output=input.replace(
-        /[a-z0-9]*-[a-z0-9]*-[a-z0-9]*-[a-z0-9]*-[a-z0-9]*/g,""  // Weird IDs go.
-        ).replace(/.[0-9]* --> [0-9]*:[0-9]*:[0-9]*.[0-9]*/g,"   " // All but the start of each timestamp line goes.
-        ).replace(/(NOTE .*)/g,""  // Removes notes.
-        ).replace(/WEBVTT/,"" // Removes intro line.
-        ).replace(/\s*\n\<v (.*?)>/g, "\t$1\t" // Timestamp to speaker name is tab separated.
-        ).replace(/\<\/v\>\n/g, ""   // Terminating </v> and following blank line gone.
-        ).replace(/^\n*/, "Timespan\tSpeaker\tContent\n") // Take out initial blank lines, and replace with column headings.
+    return (input
+        .replace( /[a-z0-9]*-[a-z0-9]*-[a-z0-9]*-[a-z0-9]*-[a-z0-9]*/g,"") // Weird IDs go.
+        .replace(/.[0-9]* --> [0-9]*:[0-9]*:[0-9]*.[0-9]*/g,"   ") // All but the start of each timestamp line goes.
+        .replace(/(NOTE .*)/g,"")  // Removes notes.
+        .replace(/WEBVTT/,"") // Removes intro line.
+        .replace(/\s*\n\<v (.*?)>/g, "\t$1\t") // Timestamp to speaker name is tab separated.
+        .replace(/\<\/v\>\n/g, "")  // Terminating </v> and following blank line gone.
+        .replace(/^\n*/, "Timespan\tSpeaker\tContent\n") // Take out initial blank lines, and replace with column headings.
         
         /* Now it gets complicated. We have:
             00:00:00	Fred	I'm sorry if cat meows
             00:00:06	Fred	Uh.
         And we want:
             00:00:00	Fred	I'm sorry if cat meows---Uh.
-        So we do a complicated substitution, and to handle more than 2 in a row, we keep doing it until no more matches are found. */
+        So we do a search that looks for the duplicated name using \k<groupName>.
+        To handle more than 2 in a row, we repeat it. We could do that until no more matches are found, but actually we probably want timestamps
+        every minute or so, so do it three times to get up to 8 items concatenated. */
 
-        do {
-            var latestVersion=output,
-            output=latestVersion.replace(/(?<time>\d\d:\d\d:\d\d)\t(?<speaker>.*?)\t(?<text>.*?)\n\d\d:\d\d:\d\d\t(\k<speaker>\t)/g,
+        .replace(/(?<time>\d\d:\d\d:\d\d)\t(?<speaker>.*?)\t(?<text>.*?)\n\d\d:\d\d:\d\d\t(\k<speaker>\t)/g,
                                         "$<time>\t$<speaker>\t$<text>---")
-        } while (! (latestVersion===output))
-        
+        .replace(/(?<time>\d\d:\d\d:\d\d)\t(?<speaker>.*?)\t(?<text>.*?)\n\d\d:\d\d:\d\d\t(\k<speaker>\t)/g,
+                                        "$<time>\t$<speaker>\t$<text>---")
+        .replace(/(?<time>\d\d:\d\d:\d\d)\t(?<speaker>.*?)\t(?<text>.*?)\n\d\d:\d\d:\d\d\t(\k<speaker>\t)/g,
+                                        "$<time>\t$<speaker>\t$<text>---")
 
-        /* And shift all the timestamps: */
-        
-        output=output.replace(/\d\d:\d\d:\d\d\t/g, (e) => {
+        // And shift all the timestamps:
+        .replace(/\d\d:\d\d:\d\d\t/g, (e) => {
             let hms=e.split(':');
             let seconds = parseInt(hms[0]) * 3600 + parseInt(hms[1]) * 60 + parseInt(hms[2]);
             seconds += timeshift;
-            // ~~ forces integer arithmetic. PadStart zero-pads the string.
             let timestamp = seconds < 0 ? "--:--:--" : // Mark negative timestamps for removal.
+                                // ~~ forces integer arithmetic. PadStart zero-pads the string:
                                 (~~(seconds / 3600)).toString().padStart(2,'0') + ':' +
                                 (~~((seconds % 3600) / 60)).toString().padStart(2,'0') + ':' +
                                 (seconds % 60).toString().padStart(2,'0');
@@ -102,16 +103,16 @@ function processInput( input, timeshift ){
             })
         
         // Remove those negative timestamps:
-        output=output.replace(/--:--:--\t.*\n/g,"")
+        .replace(/--:--:--\t.*\n/g,"")
         
         /* And we need also to check for duplicate timestamps, which NVivo rejects
         00:00:00	Fred	I'm sorry if cat meows
         00:00:00	Jim Don't be
         Put .5 after the second timestamp. Won't handle triples, but they're unlikely. */
         
-        output=output.replace(/(?<time>\d\d:\d\d:\d\d)\t(?<rest>.*?)\n\k<time>\t/g,"$<time>\t$<rest>\n$<time>.5\t")
+        .replace(/(?<time>\d\d:\d\d:\d\d)\t(?<rest>.*?)\n\k<time>\t/g,"$<time>\t$<rest>\n$<time>.5\t")
                 
-        return output;
+        );
 }
 
 function cleanVTT(){
@@ -129,7 +130,7 @@ function cleanVTT(){
 
 function download(filename) {
     // Saves the contents of element 'output' to file filename, replacing its extension with .txt
-	filename = filename.replace(/.vtt$/, ".txt");
+	filename = filename.replace(/.vtt$/i, ".txt");
 	var input = document.getElementById("output").value
 	var element = document.createElement('a');
 	element.setAttribute('href', 'data:text/plain;charset=utf-8,' + encodeURIComponent(input));
@@ -162,7 +163,7 @@ function checkTimeshift() {
 	<p>This page will convert a WebVtt transcript file from Microsoft Teams or Zoom into a formatted text file to import into Atlas.ti or NVivo</p>
 
 	<p>Choose a file from your computer using Choose file. The file should be a text based file with a .vtt extension.
-        Enter a time shift value in seconds to add to each timestamp (typically -10 or so).
+        You may want to enter a time shift value in seconds to add to each timestamp (typically -10 or so).
         Then click Convert and Download to create the converted .txt file</p>
 </div>
 
@@ -180,7 +181,7 @@ function checkTimeshift() {
 	</form>
 </div>
 
-
+<!-- Dummy textareas to hold the input and output file contents -->
 <div id="inputDiv" style="display: none;">
 	<p>Input</p>
 	<textarea id="inputData" name="inputData"  >
@@ -192,6 +193,8 @@ function checkTimeshift() {
 	<textarea id="output" >
 	</textarea>
 </div>
+
+<!-- Footer with copyright etc. -->
 
 <footer id="footer">
 
