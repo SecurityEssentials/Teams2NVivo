@@ -252,7 +252,9 @@ SOFTWARE.</p>
 <!-- ************************************ Unit Tests ****************************** -->
 
 <script type="text/javascript">
+// This script runs unit tests on page load, and displays an error message if they fail.
 function findError(actual, expected) {
+    // Answers an error message with the location of the error and problem.
     actuals = actual.split("\n");
     expecteds = expected.split("\n")
     for (var i = 0; i<Math.min(actuals.length, expecteds.length); i++) {
@@ -265,6 +267,9 @@ var testInput=`WEBVTT
 NOTE stuff etc.
 
 00:00:00.000 --> 00:00:06.110
+<v Joe>Before start. </v>
+
+00:00:01.000 --> 00:00:06.110
 <v Fred>I'm sorry if cats meows happened throughout this. </v>
 
 00:00:06.820 --> 00:00:07.390
@@ -272,13 +277,24 @@ NOTE stuff etc.
 
 00:00:08.070 --> 00:00:08.620
 <v Joe>Right?</v>
+
+2
+00:00:09.540 --> 00:00:12.990
+Andrew Knight: We have that setup. Okay.
+
+3
+00:00:15.540 --> 00:00:18.990
+Okay.
 `;
 
 var expectedOutput=`Timespan\tSpeaker\tContent
-00:00:01\tFred\tI'm sorry if cats meows happened throughout this. ---Uh.
-00:00:09\tJoe\tRight?`
+00:00:00\tFred\tI'm sorry if cats meows happened throughout this. ---Uh.
+00:00:07\tJoe\tRight?
+00:00:08\tAndrew Knight\tWe have that setup. Okay.
+00:00:14\t\tOkay.`
 
-document.getElementById("unitTestResult").innerHTML = processInput(testInput, 1) === expectedOutput ?
-    "" : "Self tests failed: " + findError( processInput(testInput, 1), expectedOutput ) + "<br> Please notifiy developers.";
+let actualOutput= processInput(testInput, -1);
+document.getElementById("unitTestResult").innerHTML = actualOutput === expectedOutput ?
+    "" : "Self tests failed: " + findError( actualOutput, expectedOutput ) + "<br> Please notifiy developers.";
 </script>
 
