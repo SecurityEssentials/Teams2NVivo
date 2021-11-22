@@ -279,7 +279,7 @@ NOTE Confidence: 0.648119294
 Times don't matter for testing.
 
 00:00:00.000 --> 00:00:06.110
-<v Joe>Before start. </v>
+<v Joe>Captions from Teams. Before start. </v>
 
 00:00:01.000 --> 00:00:06.110
 <v Fred>I'm sorry if cats meows happened throughout this. </v>
@@ -292,7 +292,7 @@ Times don't matter for testing.
 
 2
 00:00:09.540 --> 00:00:12.990
-Andrew Knight: We have that setup. Okay.
+Andrew Knight: Captions from Zoom. Okay.
 
 3
 00:00:15.540 --> 00:00:18.990
@@ -303,7 +303,7 @@ var expectedOutput=`Timespan\tSpeaker\tContent
 00:00:01\t\tNon-speaker captions from Microsoft Stream---Times don't matter for testing.
 00:00:00\tFred\tI'm sorry if cats meows happened throughout this. ---Uh.
 00:00:07\tJoe\tRight?
-00:00:08\tAndrew Knight\tWe have that setup. Okay.---Okay.`
+00:00:08\tAndrew Knight\tCaptions from Zoom. Okay.---Okay.`
 
 let actualOutput= processInput(testInput, -1);
 document.getElementById("unitTestResult").innerHTML = actualOutput === expectedOutput ?
