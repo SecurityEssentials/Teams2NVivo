@@ -85,7 +85,10 @@ function processInput( input, timeshift ){
         .replace(/(?<time>\d\d:\d\d:\d\d)\s*?\n<v (?<speaker>.*?)>(?<text>.*?)<\/v>\n/g, "$<time>\t$<speaker>\t$<text>" )
         // Zoom transcript items:
         .replace(/\d*?\n(?<time>\d\d:\d\d:\d\d)\s*?\n(?<speaker>.*?): (?<text>.*?)\n/g, "$<time>\t$<speaker>\t$<text>" )
-        .replace(/^\n*/, "Timespan\tSpeaker\tContent\n") // Take out initial blank lines, and replace with column headings.
+        // Occasionally Zoom doesn't put in a speaker. Put in as blank, and rely on NVivo 'fill down'
+        .replace(/\d*?\n(?<time>\d\d:\d\d:\d\d)\s*?\n(?<text>.*?)\n/g, "$<time>\t\t$<text>" )
+        // Take out initial blank lines, and replace with column headings:
+        .replace(/^\n*/, "Timespan\tSpeaker\tContent\n")
         
         /* Now it gets complicated. We have:
             00:00:00	Fred	I'm sorry if cat meows
