@@ -6,7 +6,7 @@ This utility converts a Microsoft Teams transcript to the [NVivo format](https:/
 
 [Microsoft Teams](https://twitter.com/MicrosoftTeams) does surprisingly good automated transcription, and these transcripts can be downloaded along with the corresponding recordings. 
 
-This utility allows you to use these transcripts with [NVivo](https://www.qsrinternational.com/nvivo-qualitative-data-analysis-software/home), the popular qualitative analysis software. It's written in *awk* so it requires no extra software on any Mac or Linux system, and only one extra app (see below) on MS Windows.
+This utility allows you to use these transcripts with [NVivo](https://www.qsrinternational.com/nvivo-qualitative-data-analysis-software/home), the popular qualitative analysis software. It's written in HTML and JavaScript so only requires your browser to run.
 
  NVivo doesn't allow you to code two transcript items at once, so this combines as many items by a single speaker as possible. And Teams transcription times aren't always aligned with the start of the recording, so this implements a 'time shift'.
 
