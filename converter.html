@@ -100,14 +100,15 @@ function processInput( input, timeshift ){
         And we want:
             00:00:00	Fred	I'm sorry if cat meows---Uh.
         So we do a search that looks for the duplicated name using \k<groupName>.
+        We also do the same if the second speaker name is blank (Zoom special, or just no speakers).
         To handle more than 2 in a row, we repeat it. We could do that until no more matches are found, but actually we probably want timestamps
         every minute or so, so do it three times to get up to 8 items concatenated. */
 
-        .replace(/(?<time>\d\d:\d\d:\d\d)\t(?<speaker>.*?)\t(?<text>.*?)\n\d\d:\d\d:\d\d\t(\k<speaker>\t)/g,
+        .replace(/(?<time>\d\d:\d\d:\d\d)\t(?<speaker>.*?)\t(?<text>.*?)\n\d\d:\d\d:\d\d\t(\k<speaker>|)\t/g,
                                         "$<time>\t$<speaker>\t$<text>---")
-        .replace(/(?<time>\d\d:\d\d:\d\d)\t(?<speaker>.*?)\t(?<text>.*?)\n\d\d:\d\d:\d\d\t(\k<speaker>\t)/g,
+        .replace(/(?<time>\d\d:\d\d:\d\d)\t(?<speaker>.*?)\t(?<text>.*?)\n\d\d:\d\d:\d\d\t(\k<speaker>|)\t/g,
                                         "$<time>\t$<speaker>\t$<text>---")
-        .replace(/(?<time>\d\d:\d\d:\d\d)\t(?<speaker>.*?)\t(?<text>.*?)\n\d\d:\d\d:\d\d\t(\k<speaker>\t)/g,
+        .replace(/(?<time>\d\d:\d\d:\d\d)\t(?<speaker>.*?)\t(?<text>.*?)\n\d\d:\d\d:\d\d\t(\k<speaker>|)\t/g,
                                         "$<time>\t$<speaker>\t$<text>---")
 
         // And shift all the timestamps:
@@ -211,7 +212,7 @@ function checkTimeshift() {
 		</textarea>	
 </div>
 
-<div id="outputDiv" style="display: none;"> <!--style="visibility: hidden;"-->
+<div id="outputDiv" style="display: none;">
 	<p>Output</p>
 	<textarea id="output" >
 	</textarea>
@@ -261,7 +262,7 @@ function findError(actual, expected) {
         if (! (actuals[i] === expecteds[i]))
             break;
     }
-    return "output line " + i.toString() + ': expected "' + expecteds[i] + '", got "' + actuals[i] + '"';
+    return "output line " + (i+1).toString() + ': expected "' + expecteds[i] + '", got "' + actuals[i] + '"';
 }
 var testInput=`WEBVTT
 NOTE stuff etc.
@@ -290,8 +291,7 @@ Okay.
 var expectedOutput=`Timespan\tSpeaker\tContent
 00:00:00\tFred\tI'm sorry if cats meows happened throughout this. ---Uh.
 00:00:07\tJoe\tRight?
-00:00:08\tAndrew Knight\tWe have that setup. Okay.
-00:00:14\t\tOkay.`
+00:00:08\tAndrew Knight\tWe have that setup. Okay.---Okay.`
 
 let actualOutput= processInput(testInput, -1);
 document.getElementById("unitTestResult").innerHTML = actualOutput === expectedOutput ?
