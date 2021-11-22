@@ -17,6 +17,10 @@ footer {
 #interactions {
     line-height: 2.5;
 }
+
+#unitTestResult {
+    color:red;
+}
 </style>
 
 <!-- ****************************************** Javascript *********************************************** -->
@@ -119,12 +123,12 @@ function processInput( input, timeshift ){
             return timestamp + '\t';
             })
         
-        // Remove those negative timestamps:
+        // Remove items with negative timestamps:
         .replace(/--:--:--\t.*\n/g,"")
         
         /* And we need also to check for duplicate timestamps, which NVivo rejects
         00:00:00	Fred	I'm sorry if cat meows
-        00:00:00	Jim Don't be
+        00:00:00	Jim Don't worry about the cat.
         Put .5 after the second timestamp. Won't handle triples, but they're unlikely. */
         
         .replace(/(?<time>\d\d:\d\d:\d\d)\t(?<rest>.*?)\n\k<time>\t/g,"$<time>\t$<rest>\n$<time>.5\t")
@@ -213,6 +217,8 @@ function checkTimeshift() {
 	</textarea>
 </div>
 
+<p id="unitTestResult" ></p>
+    
 <!-- Footer with copyright etc. -->
 
 <footer id="footer">
@@ -240,7 +246,39 @@ SOFTWARE.</p>
     
   </div>
 </div>
-
-
 </footer>
 </body>
+
+<!-- ************************************ Unit Tests ****************************** -->
+
+<script type="text/javascript">
+function findError(actual, expected) {
+    actuals = actual.split("\n");
+    expecteds = expected.split("\n")
+    for (var i = 0; i<Math.min(actuals.length, expecteds.length); i++) {
+        if (! (actuals[i] === expecteds[i]))
+            break;
+    }
+    return "output line " + i.toString() + ': expected "' + expecteds[i] + '", got "' + actuals[i] + '"';
+}
+var testInput=`WEBVTT
+NOTE stuff etc.
+
+00:00:00.000 --> 00:00:06.110
+<v Fred>I'm sorry if cats meows happened throughout this. </v>
+
+00:00:06.820 --> 00:00:07.390
+<v Fred>Uh.</v>
+
+00:00:08.070 --> 00:00:08.620
+<v Joe>Right?</v>
+`;
+
+var expectedOutput=`Timespan\tSpeaker\tContent
+00:00:01\tFred\tI'm sorry if cats meows happened throughout this. ---Uh.
+00:00:09\tJoe\tRight?`
+
+document.getElementById("unitTestResult").innerHTML = processInput(testInput, 1) === expectedOutput ?
+    "" : "Self tests failed: " + findError( processInput(testInput, 1), expectedOutput ) + "<br> Please notifiy developers.";
+</script>
+
