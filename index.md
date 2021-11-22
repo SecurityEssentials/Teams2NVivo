@@ -14,7 +14,6 @@ This utility allows you to use these transcripts with [NVivo](https://www.qsrint
 
 These instructions are importing to Windows NVivo 12. Mac users may need to adjust them for your own situation. 
 
-* Download the [converter.html script here](https://github.com/SecurityEssentials/vttprocessor/releases/latest/download/converter.html) and double click to open it as a webpage.
 * Record your interview in Teams, creating a transcript 
 * The video and transcript appear as entries in due course in the chat (**The transcript may take several hours**)
 * <img src="images/TeamsChat.png">
@@ -24,7 +23,7 @@ These instructions are importing to Windows NVivo 12. Mac users may need to adju
 
 * On the transcript in the chat, click *... Download as .vtt*
 
-* Use the converter script to convert that .vtt file to NVivo transcript format (whose file extension is .txt):
+* Use the [converter page here](converter.html) to convert that .vtt file to NVivo transcript format (whose file extension is .txt):
     
 * Import that transcript into NVivo by opening the recording and clicking *Edit*, then *Import rows*. Use the options *One transcript row for each tab-delimited line*, *File includes header row*, and manually set the obvious field mappings as shown below (details blanked for privacy). There's more information [here](https://help-nv.qsrinternational.com/12/win/v12.1.108-d3ea61/Content/files/import-audio-video-transcripts.htm#Import_a_transcript):
 
