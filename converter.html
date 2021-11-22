@@ -81,7 +81,7 @@ function processInput( input, timeshift ){
     */
     
     return (input
-        .replace( /[a-z0-9]*-[a-z0-9]*-[a-z0-9]*-[a-z0-9]*-[a-z0-9]*/g,"") // Weird IDs go.
+        .replace( /[a-z0-9]*-[a-z0-9]*-[a-z0-9]*-[a-z0-9]*-[a-z0-9]*\n/g,"") // Weird MS Streams ID lines go.
         .replace(/.[0-9]* --> [0-9]*:[0-9]*:[0-9]*.[0-9]*/g,"   ") // All but the start of each timestamp line goes.
         .replace(/NOTE .*?\n/g,"")  // Removes notes.
         .replace(/WEBVTT/,"") // Nulls out intro line.
@@ -265,7 +265,18 @@ function findError(actual, expected) {
     return "output line " + (i+1).toString() + ': expected "' + expecteds[i] + '", got "' + actuals[i] + '"';
 }
 var testInput=`WEBVTT
-NOTE stuff etc.
+
+NOTE Confidence: 0.648119294
+
+53118acb-c442-4300-a3e9-4f29e5413f84
+00:00:02.160 --> 00:00:06.560
+Non-speaker captions from Microsoft Stream
+
+NOTE Confidence: 0.648119294
+
+7e46607a-d03d-44be-bbc5-6c0a9c898ec9
+00:00:06.560 --> 00:00:07.967
+Times don't matter for testing.
 
 00:00:00.000 --> 00:00:06.110
 <v Joe>Before start. </v>
@@ -289,6 +300,7 @@ Okay.
 `;
 
 var expectedOutput=`Timespan\tSpeaker\tContent
+00:00:01\t\tNon-speaker captions from Microsoft Stream---Times don't matter for testing.
 00:00:00\tFred\tI'm sorry if cats meows happened throughout this. ---Uh.
 00:00:07\tJoe\tRight?
 00:00:08\tAndrew Knight\tWe have that setup. Okay.---Okay.`
