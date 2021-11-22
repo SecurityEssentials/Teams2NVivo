@@ -17,7 +17,7 @@ These instructions are importing to Windows NVivo 12. Mac users may need to adju
 * Download the [converter.html script here](https://github.com/SecurityEssentials/vttprocessor/releases/latest/download/converter.html) and double click to open it as a webpage.
 * Record your interview in Teams, creating a transcript 
 * The video and transcript appear as entries in due course in the chat (**The transcript may take several hours**)
-* <img src="Images/TeamsChat.png">
+* <img src="images/TeamsChat.png">
 * On the video, click *...* and *Open in Microsoft Stream.* Scroll down to Details tab, and click *... Download video*.
 * Optionally, if you want audio only, click on the downloaded video file to open in Quicktime; use *File - Export As - Audio Only* to get an m4a file
 * import the M4A audio or MP4 video into NVivo - see [here](https://help-nv.qsrinternational.com/12/win/v12.1.108-d3ea61/Content/files/audio-and-videos.htm)
@@ -28,13 +28,13 @@ These instructions are importing to Windows NVivo 12. Mac users may need to adju
     
 * Import that transcript into NVivo by opening the recording and clicking *Edit*, then *Import rows*. Use the options *One transcript row for each tab-delimited line*, *File includes header row*, and manually set the obvious field mappings as shown below (details blanked for privacy). There's more information [here](https://help-nv.qsrinternational.com/12/win/v12.1.108-d3ea61/Content/files/import-audio-video-transcripts.htm#Import_a_transcript):
 
-* <img src="Images/NVivoImport.png">
+* <img src="images/NVivoImport.png">
 
 * Click OK to do the import. If NVivo pops up a dialog with *The timespan of one or more entries...*, click OK
 
 * You'll see the transcript entries have '---' internally instead of paragraph endings (NVivo doesn't have a text transcript input format that supports both speaker identification and multiple paragraphs in a single transcript 'line'). Use *Edit tab - Find & Select - Replace* to replace instances of "---" with "^p^p" (a blank line): 
 
-* <img src="Images/NVivoReplace.png">
+* <img src="images/NVivoReplace.png">
 
 * Click *Replace all*. It takes a while and looks a bit odd, but it works. Click OK to the *Replaced Instances* dialog and you're done. 
 
