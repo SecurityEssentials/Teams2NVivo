@@ -1,6 +1,6 @@
 # Convert Teams Transcripts to NVivo
 
-This utility converts a Microsoft Teams transcript to the [NVivo format](https://help-nv.qsrinternational.com/12/win/v12.1.108-d3ea61/Content/files/import-audio-video-transcripts.htm) so as to make coding and analysis as easy as possible.
+This utility converts a Microsoft Teams transcript to the [NVivo format](https://help-nv.qsrinternational.com/12/win/v12.1.108-d3ea61/Content/files/import-audio-video-transcripts.htm) so as to make coding and analysis as easy as possible. Click [here](converter.html) to go straight to the utility.
 
 ## Introduction
 
