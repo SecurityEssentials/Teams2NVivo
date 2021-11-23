@@ -45,4 +45,6 @@ Sometimes (usually?) the timings on the transcript are a few seconds different f
 * Change the timings in the transcript using the timeshift parameter. 
 * And reload the transcript as above. Experiment with different values of the timeshift until it's close enough for your needs (-10 is typical).
 
+## Credits
 
+Thanks go to [Steve Wright, NVivo and Atlas TI guru](https://caqdasblog.wordpress.com/), who introduced us to advanced NVivo techniques and to automated coding. And thanks to [Tim Ellis](https://github.com/TimEllis), who created the first version of this tool.
