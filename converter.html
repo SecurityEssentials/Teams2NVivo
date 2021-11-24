@@ -289,6 +289,7 @@ NOTE Confidence: 0.648119294
 00:00:06.560 --> 00:00:07.967
 Times don't matter for testing.
 
+NOTE Transcripts with speaker from Microsoft Teams
 00:00:00.000 --> 00:00:06.110
 <v Joe>Captions from Teams. Before start. </v>
 
@@ -301,6 +302,7 @@ Times don't matter for testing.
 00:00:08.070 --> 00:00:08.620
 <v Joe>Right?</v>
 
+NOTE Zoom transcripts (occasionally omit the speaker)
 2
 00:00:09.540 --> 00:00:12.990
 Andrew Knight: Captions from Zoom. Okay.
@@ -308,13 +310,25 @@ Andrew Knight: Captions from Zoom. Okay.
 3
 00:00:15.540 --> 00:00:18.990
 Okay.
-`;
+
+NOTE Testing only 8 items concatenated. Use pre-converted data:
+00:00:01\tFred\ta
+00:00:01\tFred\ta
+00:00:01\tFred\ta
+00:00:01\t\ta
+00:00:01\tFred\ta
+00:00:01\tFred\ta
+00:00:01\tFred\ta
+00:00:01\tFred\ta
+00:00:02\tFred\ta`;
 
 var expectedOutput=`Timespan\tSpeaker\tContent
 00:00:01\t\tNon-speaker captions from Microsoft Stream---Times don't matter for testing.
 00:00:00\tFred\tI'm sorry if cats meows happened throughout this. ---Uh.
 00:00:07\tJoe\tRight?
-00:00:08\tAndrew Knight\tCaptions from Zoom. Okay.---Okay.`
+00:00:08\tAndrew Knight\tCaptions from Zoom. Okay.---Okay.
+00:00:00\tFred\ta---a---a---a---a---a---a---a
+00:00:01\tFred\ta`
 
 let actualOutput= processInput(testInput, -1);
 document.getElementById("unitTestResult").innerHTML = actualOutput === expectedOutput ?
