@@ -12,16 +12,16 @@ This utility allows you to use these transcripts with [NVivo](https://www.qsrint
 
 ## Instructions
 
-These instructions are importing to Windows NVivo 12. Mac users may need to adjust them for your own situation. 
+These instructions are importing from Teams to Windows NVivo 12. Zoom and Mac users may need to adjust them for your own situation (and yes, the converter supports Zoom transcripts)
 
 * Record your interview in Teams, creating a transcript 
-* The video and transcript appear as entries in due course in the chat (**The transcript may take several hours**)
+* The video and transcript appear as entries in due course in the chat (**The transcript may take several hours to produce**)
 * <img src="images/TeamsChat.png">
 * On the video, click *...* and *Open in Microsoft Stream.* Scroll down to Details tab, and click *... Download video*.
 * Optionally, if you want audio only, click on the downloaded video file to open in Quicktime; use *File - Export As - Audio Only* to get an m4a file
 * import the M4A audio or MP4 video into NVivo - see [here](https://help-nv.qsrinternational.com/12/win/v12.1.108-d3ea61/Content/files/audio-and-videos.htm)
 
-* On the transcript in the chat, click *... Download as .vtt*
+* On the transcript in the chat, click *... Download as .vtt* **Note:** You could also download a VTT transcript from Microsoft Stream---but that version doesn't have speaker names.  
 
 * Use the [converter page here](converter.html) to convert that .vtt file to NVivo transcript format (whose file extension is .txt):
     
@@ -43,7 +43,7 @@ Sometimes (usually?) the timings on the transcript are a few seconds different f
 
 * Delete the transcript entries in NVivo (either *Select All - Right click Delete*; or just *Undo* a couple of times).
 * Change the timings in the transcript using the timeshift parameter. 
-* And reload the transcript as above. Experiment with different values of the timeshift until it's close enough for your needs (-10 is typical).
+* And reload the transcript and fix the paragraph endings as above. Experiment with different values of the timeshift until it's close enough for your needs (-10 is typical).
 
 ## Credits
 

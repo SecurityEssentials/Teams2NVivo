@@ -172,7 +172,7 @@ function download(filename) {
 }
 
 function checkTimeshift() {
-    // Disables the Convert and Download button if the timeshift is invalid.
+    // Disables the Convert and Download button if there's no input file or the timeshift is invalid.
     document.getElementById("doConvert").disabled = !
         (document.getElementById("timeshift").value.match( /^-?\d+$/ ) &&
         document.getElementById("fileName").value.length != 0)
@@ -228,6 +228,9 @@ function checkTimeshift() {
 
 <p id="unitTestResult" ></p>
     
+<p> If you find a bug in the converter, or want to suggest an improvement, please report it in the <a href="https://github.com/SecurityEssentials/Teams2NVivo/issues">project issue tracker here</a>,
+citing the browser used, the operating system, the issue, and perhaps a sample of a VTT file that causes the problem (edited if necessary to preserve privacy). </p>
+
 <!-- Footer with copyright etc. -->
 
 <footer id="footer">
