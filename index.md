@@ -1,10 +1,10 @@
-# Convert Teams Transcripts to NVivo
+# Convert Teams and Zoom Transcripts to NVivo
 
-This utility converts a Microsoft Teams transcript to the [NVivo format](https://help-nv.qsrinternational.com/12/win/v12.1.108-d3ea61/Content/files/import-audio-video-transcripts.htm) so as to make coding and analysis as easy as possible. Click [here](converter.html) to go straight to the utility.
+This utility converts a Microsoft Teams or Zoom transcript to the [NVivo format](https://help-nv.qsrinternational.com/12/win/v12.1.108-d3ea61/Content/files/import-audio-video-transcripts.htm) so as to make coding and analysis as easy as possible. Click [here](converter.html) to go straight to the utility.
 
 ## Introduction
 
-[Microsoft Teams](https://twitter.com/MicrosoftTeams) does surprisingly good automated transcription, and these transcripts can be downloaded along with the corresponding recordings. 
+[Microsoft Teams](https://twitter.com/MicrosoftTeams) does surprisingly good automated transcription, as does [Zoom](https://zoom.us/); and these transcripts can be downloaded along with the corresponding recordings. 
 
 This utility allows you to use these transcripts with [NVivo](https://www.qsrinternational.com/nvivo-qualitative-data-analysis-software/home), the popular qualitative analysis software. It's written in HTML and JavaScript so only requires your browser to run.
 
@@ -42,8 +42,8 @@ These instructions are importing from Teams to Windows NVivo 12. Zoom and Mac us
 Sometimes (usually?) the timings on the transcript are a few seconds different from those in the recording. NVivo doesn't seem to have an easy way to correct that, so we've implemented one in the script here. To make the correction:
 
 * Delete the transcript entries in NVivo (either *Select All - Right click Delete*; or just *Undo* a couple of times).
-* Change the timings in the transcript using the timeshift parameter. 
-* And reload the transcript and fix the paragraph endings as above. Experiment with different values of the timeshift until it's close enough for your needs (-10 is typical).
+* Go back to the [converter page](converter.html), and enter a suitable timeshift parameter (-10 is typical). 
+* And reload the transcript and fix the paragraph endings as above. Experiment with different values of the timeshift until it's close enough for your needs.
 
 ## Credits
 
