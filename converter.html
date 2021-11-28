@@ -15,7 +15,7 @@ layout: default
 
 <style>
 
-footer {
+footer, #wordsDeleted {
     font-style: italic;
 }
 
@@ -31,6 +31,7 @@ footer {
 <!-- ****************************************** Javascript *********************************************** -->
 
 <script type="text/javascript">
+var AllWordsDeleted={};
 
 function fileChosenEvent(event){
 	var input = event.target;
@@ -52,8 +53,16 @@ function fileChosenEvent(event){
     checkTimeshift()
   };
   
-function processInput( input, timeshift ){
+function wordsDeleted(s) {
+    // Remembers the words from line s that will been removed.
+    for (const i of s.split('\t')[2].split(/\W+/).filter( s => s)) { // Split third item ignoring anything that's not alphanumeric.
+        AllWordsDeleted[i.toLowerCase()] = true;
+    }
+        
+}
+function processInput( input, timeshift, deleteShort ){
     // Does the conversion, adding timeshift to each timestamp (may be negative)
+    // If deleteShort, then removes short phrases.
     /* Input:
         WEBVTT
         NOTE stuff etc.
@@ -84,6 +93,7 @@ function processInput( input, timeshift ){
         Andrew Knight: It's like Mary Kate's here. I'll let her in.
 
     */
+    AllWordsDeleted={};
     
     return (input
         .replace( /[a-z0-9]*-[a-z0-9]*-[a-z0-9]*-[a-z0-9]*-[a-z0-9]*\n/g,"") // Weird MS Streams ID lines go.
@@ -100,7 +110,13 @@ function processInput( input, timeshift ){
         .replace(/^\n*/, "Timespan\tSpeaker\tContent\n")
         
         /* Now look for short interjections (10 chars or less) and remove them: */
-        .replace(/(?<time>\d\d:\d\d:\d\d)\t(?<speaker>.*?)\t(?<text>[\S ]{0,10}?)\n/g, "")
+        .replace(/(?<time>\d\d:\d\d:\d\d)\t(?<speaker>.*?)\t(?<text>[\S ]{0,10}?)\n/g, (s) => {
+            if (deleteShort) {
+                wordsDeleted( s );
+                return "";
+            }
+            return s;
+            })
         
         /* Now it gets complicated. We have:
             00:00:00	Fred	I'm sorry if cat meows
@@ -151,9 +167,10 @@ function cleanVTT(){
     var outputElement = document.getElementById("output")
     var filename = document.getElementById("fileName").value;
     var timeshift = parseInt(document.getElementById("timeshift").value);
+    var deleteShort = document.getElementById("deleteShort").checked
 
-    outputElement.value = processInput( input, timeshift )
-
+    outputElement.value = processInput( input, timeshift, deleteShort )
+    document.getElementById("wordsDeleted").innerHTML = Object.keys(AllWordsDeleted).join(' '); // Safe, since all non-alphanum filtered out in WordsDeleted().
     download(filename);
 }
 
@@ -198,7 +215,7 @@ function checkTimeshift() {
  
     <p>See <a href="index.html">the main page</a> for full instructions.</p>
     
-    <p>You may want to enter a time shift value in seconds to add to each timestamp (typically -10 or so).
+    <p>You may want to enter a time shift value in seconds to add to each timestamp (typically -10 or so), and to filter out phrases of less than 10 characters.
         Then click Convert and Download to create the converted .txt file</p>
 </div>
 
@@ -210,7 +227,9 @@ function checkTimeshift() {
 		<input type="hidden" id="fileName" />
 		<br/>
         <label for="timeshift">Time shift:</label>
-        <input type="text" id="timeshift" name="timeshift" value=0 onChange="checkTimeshift()">
+        <input type="text" id="timeshift" name="timeshift" value=0 onChange="checkTimeshift()"><br>
+        <label for="deleteShort">Filter out short phrases:</label>
+        <input type="checkbox" id="deleteShort" name="deleteShort" value=false>
 		<br/>
 		<input type="button" id="doConvert" onclick="cleanVTT();" disabled value="Convert and Download"/>
 	</form>
@@ -229,6 +248,7 @@ function checkTimeshift() {
 	</textarea>
 </div>
 
+<p>Words filtered: <span id="wordsDeleted"/></p>
 <p id="unitTestResult" ></p>
     
 <p> If you find a bug in the converter, or want to suggest an improvement, please report it in the <a href="https://github.com/SecurityEssentials/Teams2NVivo/issues">project issue tracker here</a>,
@@ -294,7 +314,7 @@ Times don't matter for testing.
 
 NOTE Transcripts with speaker from Microsoft Teams
 00:00:00.000 --> 00:00:06.110
-<v Joe>Captions from Teams. Before start. </v>
+<v Joe>Captions from Teams. Before start.</v>
 
 00:00:01.000 --> 00:00:06.110
 <v Fred>I'm sorry if cats meows happened throughout this. </v>
@@ -347,9 +367,25 @@ var expectedOutput=`Timespan\tSpeaker\tContent
 00:00:01\tFred\tParticularly interesting
 00:00:00\tJoe\tI'm saying something.---Yes, It's very interesting.`
 
-let actualOutput= processInput(testInput, -1);
-document.getElementById("unitTestResult").innerHTML = actualOutput === expectedOutput ?
-    "" : "Self tests failed: " + findError( actualOutput, expectedOutput ) + "<br> Please notifiy developers.";
+expectedNonDeleteShortOutput=`Timespan\tSpeaker\tContent
+00:00:02\t\tNon-speaker captions from Microsoft Stream---Times don't matter for testing.
+00:00:00	Joe	Captions from Teams. Before start.
+00:00:01	Fred	I'm sorry if cats meows happened throughout this. ---The cats are rather worried at the moment.
+00:00:08	Joe	That sounds interesting.
+00:00:09	Andrew Knight	Captions from Zoom. Okay.---More captions.
+00:00:01	Fred	Particularly interesting---Particularly interesting---Particularly interesting---Particularly interesting---Particularly interesting---Particularly interesting---Particularly interesting---Particularly interesting
+00:00:02	Fred	Particularly interesting
+00:00:01	Joe	I'm saying something.
+00:00:01.5	Fred	Yes?
+00:00:06	Joe	Err---Yes, It's very interesting.`
+
+deleteShortOutput= processInput(testInput, -1, true);
+nonDeleteShortOutput= processInput(testInput, 0, false);
+document.getElementById("unitTestResult").innerHTML = deleteShortOutput === expectedOutput && nonDeleteShortOutput === expectedNonDeleteShortOutput ? ""
+    : "Self tests failed: " +
+        (deleteShortOutput === expectedOutput ? "ND " + findError( nonDeleteShortOutput, expectedNonDeleteShortOutput ) : findError( deleteShortOutput, expectedOutput)) +
+        "<br> Please notifiy developers.";
+    
 </script>
 
 <!-- ************************************ Google Analytics ****************************** -->
