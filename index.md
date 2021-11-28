@@ -23,7 +23,7 @@ These instructions are importing from Teams to Windows NVivo 12. Zoom and Mac us
 
 * On the transcript in the chat, click *... Download as .vtt* **Note:** You could also download a VTT transcript from Microsoft Stream---but that version doesn't have speaker names.  
 
-* Use the [converter page here](converter.html) to convert that .vtt file to NVivo transcript format (whose file extension is .txt):
+* Use the [converter page here](converter.html) to convert that .vtt file to NVivo transcript format (whose file extension is .txt).
     
 * Import that transcript into NVivo by opening the recording and clicking *Edit*, then *Import rows*. Use the options *One transcript row for each tab-delimited line*, *File includes header row*, and manually set the obvious field mappings as shown below (details blanked for privacy). There's more information [here](https://help-nv.qsrinternational.com/12/win/v12.1.108-d3ea61/Content/files/import-audio-video-transcripts.htm#Import_a_transcript):
 
@@ -37,13 +37,19 @@ These instructions are importing from Teams to Windows NVivo 12. Zoom and Mac us
 
 * Click *Replace all*. It takes a while and looks a bit odd, but it works. Click OK to the *Replaced Instances* dialog and you're done. 
 
-## Changing timestamps
+## Changing timestamps and removing yeses
 
-Sometimes (usually?) the timings on the transcript are a few seconds different from those in the recording. NVivo doesn't seem to have an easy way to correct that, so we've implemented one in the script here. To make the correction:
+Sometimes (usually?) the timings on the transcript are a few seconds different from those in the recording. NVivo doesn't seem to have an easy way to correct that, so we've implemented one in the script here. 
+
+You may also find in an interview that there are a lot of 'ums' and 'yes' that break up the flow.
+
+To fix either or both:
 
 * Delete the transcript entries in NVivo (either *Select All - Right click Delete*; or just *Undo* a couple of times).
-* Go back to the [converter page](converter.html), and enter a suitable timeshift parameter (-10 is typical). 
-* And reload the transcript and fix the paragraph endings as above. Experiment with different values of the timeshift until it's close enough for your needs.
+* Go back to the [converter page](converter.html)
+* Enter a suitable timeshift parameter (-10 is typical) and if you want, tick the *Filter out short phrases* box.
+* And reload the transcript. The page shows all the words filtered out in the short phrases. 
+* And fix the paragraph endings as above. Experiment with different values of the timeshift until it's close enough for your needs.
 
 ## Credits
 

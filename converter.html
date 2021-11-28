@@ -224,13 +224,11 @@ function checkTimeshift() {
 	<form name="data">
 		<input type="file" id="myFile" single size="50" accept=".vtt" onchange="fileChosenEvent(event)">
 
-		<input type="hidden" id="fileName" />
-		<br/>
-        <label for="timeshift">Time shift:</label>
-        <input type="text" id="timeshift" name="timeshift" value=0 onChange="checkTimeshift()"><br>
-        <label for="deleteShort">Filter out short phrases:</label>
-        <input type="checkbox" id="deleteShort" name="deleteShort" value=false>
-		<br/>
+		<input type="hidden" id="fileName" /><br/>
+        <label for="timeshift">Time shift (advanced):</label>
+        <input type="text" id="timeshift" name="timeshift" value=0 onChange="checkTimeshift()"><br/>
+        <label for="deleteShort">Filter out short phrases (advanced):</label>
+        <input type="checkbox" id="deleteShort" name="deleteShort" value=false><br/>
 		<input type="button" id="doConvert" onclick="cleanVTT();" disabled value="Convert and Download"/>
 	</form>
 </div>
