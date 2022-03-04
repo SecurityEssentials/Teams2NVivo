@@ -37,19 +37,25 @@ These instructions are importing from Teams to Windows NVivo 12. Zoom and Mac us
 
 * Click *Replace all*. It takes a while and looks a bit odd, but it works. Click OK to the *Replaced Instances* dialog and you're done. 
 
-## Changing timestamps and removing yeses
+## Changing timestamps 
 
 Sometimes (usually?) the timings on the transcript are a few seconds different from those in the recording. NVivo doesn't seem to have an easy way to correct that, so we've implemented one in the script here. 
 
+To fix the timestamps, before doing the conversion, 
+* Open the VTT transcript file in a text editor, and the M4A file in a normal viewer. 
+* Find a statement that’s identifiable in both (maybe the first thing said) and note the timings T<sub>vtt</sub> and T<sub>m4a</sub> for that statement. 
+* Then the timeshift value should be (T<sub>m4a</sub> - T<sub>vtt</sub>, converted to seconds. It can often be negative. 
+* Put that value in the *Time shift (advanced)* box.
+
+## Removing interviewer encouragements
+
 You may also find in an interview that there are a lot of 'ums' and 'yes' that break up the flow.
 
-To fix either or both:
+To fix that, just tick the *Filter out short phrases* box on the coverter page. It removes all interjections less than 10 words long. To check you've not missed anything important, the converter shows the list of all words filtered out.
 
-* Delete the transcript entries in NVivo (either *Select All - Right click Delete*; or just *Undo* a couple of times).
-* Go back to the [converter page](converter.html)
-* Enter a suitable timeshift parameter (-10 is typical) and if you want, tick the *Filter out short phrases* box.
-* And reload the transcript. The page shows all the words filtered out in the short phrases. 
-* And fix the paragraph endings as above. Experiment with different values of the timeshift until it's close enough for your needs.
+## Removing a transcript in NVivo to try again
+
+You can delete the transcript entries in NVivo using (in Edit mode) *Click on an item in the left hand column - Right click Select All - Right click Delete*.  Or, if you've just done the import, just use *Undo* a couple of times.
 
 ## Credits
 
