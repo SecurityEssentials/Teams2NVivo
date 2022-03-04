@@ -44,7 +44,7 @@ Sometimes (usually?) the timings on the transcript are a few seconds different f
 To fix the timestamps, before doing the conversion, 
 * Open the VTT transcript file in a text editor, and the M4A file in a normal viewer. 
 * Find a statement that’s identifiable in both (maybe the first thing said) and note the timings T<sub>vtt</sub> and T<sub>m4a</sub> for that statement. 
-* Then the timeshift value should be (T<sub>m4a</sub> - T<sub>vtt</sub>, converted to seconds. It can often be negative. 
+* Then the timeshift value should be (T<sub>m4a</sub> - T<sub>vtt</sub>), converted to seconds. It can often be negative. 
 * Put that value in the *Time shift (advanced)* box.
 
 ## Removing interviewer encouragements
