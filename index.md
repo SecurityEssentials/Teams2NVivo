@@ -15,13 +15,18 @@ This utility allows you to use these transcripts with [NVivo](https://www.qsrint
 These instructions are importing from Teams to Windows NVivo 12. Zoom and Mac users may need to adjust them for your own situation (and yes, the converter supports Zoom transcripts)
 
 * Record your interview in Teams, creating a transcript 
-* The video and transcript appear as entries in due course in the chat (**The transcript may take several hours to produce**)
+
+* The video and transcript appear as entries in due course in the chat (**The transcript may take several hours to produce**
+
 * <img src="images/TeamsChat.png">
+
 * On the video, click *...* and *Open in Microsoft Stream.* Scroll down to Details tab, and click *... Download video*.
+
 * Optionally, if you want audio only, click on the downloaded video file to open in Quicktime; use *File - Export As - Audio Only* to get an m4a file
+
 * import the M4A audio or MP4 video into NVivo - see [here](https://help-nv.qsrinternational.com/12/win/v12.1.108-d3ea61/Content/files/audio-and-videos.htm)
 
-* On the transcript in the chat, click *... Download as .vtt* **Note:** You could also download a VTT transcript from Microsoft Stream---but that version doesn't have speaker names.  
+* On the transcript in the chat, click *... Download as .vtt*    **Note:** You could also download a VTT transcript from Microsoft Stream---but that version doesn't have speaker names.  
 
 * Use the [converter page here](converter.html) to convert that .vtt file to NVivo transcript format (whose file extension is .txt).
     
@@ -31,7 +36,7 @@ These instructions are importing from Teams to Windows NVivo 12. Zoom and Mac us
 
 * Click OK to do the import. If NVivo pops up a dialog with *The timespan of one or more entries...*, click OK
 
-* You'll see the transcript entries have '---' internally instead of paragraph endings (NVivo doesn't have a text transcript input format that supports both speaker identification and multiple paragraphs in a single transcript 'line'). Use *Edit tab - Find & Select - Replace* to replace instances of "---" with "^p^p" (a blank line): 
+* You'll see the transcript entries have '---' internally instead of paragraph endings (NVivo doesn't have a text transcript input format that supports both speaker identification and multiple paragraphs in a single transcript 'line'). Use *Edit tab - Find & Select - Replace* to replace instances of "---" with "^p^p" (a blank line) or just "^p" (a new line): 
 
 * <img src="images/NVivoReplace.png">
 
@@ -43,8 +48,11 @@ Sometimes (usually?) the timings on the transcript are a few seconds different f
 
 To fix the timestamps, before doing the conversion, 
 * Open the VTT transcript file in a text editor, and the M4A file in a normal viewer. 
+
 * Find a statement that’s identifiable in both (maybe the first thing said) and note the timings T<sub>vtt</sub> and T<sub>m4a</sub> for that statement. 
+
 * Then the timeshift value should be (T<sub>m4a</sub> - T<sub>vtt</sub>), converted to seconds. It can often be negative. 
+
 * Put that value in the *Time shift (advanced)* box.
 
 ## Removing interviewer encouragements
