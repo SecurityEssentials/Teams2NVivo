@@ -93,15 +93,16 @@ function processInput( input, timeshift, deleteShort ){
         Andrew Knight: It's like Mary Kate's here. I'll let her in.
 
     */
+    /* See e.g. https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Regular_Expressions */
     AllWordsDeleted={};
     
     return (input
         .replace( /[a-z0-9]*-[a-z0-9]*-[a-z0-9]*-[a-z0-9]*-[a-z0-9]*\n/g,"") // Weird MS Streams ID lines go.
-        .replace(/.[0-9]* --> [0-9]*:[0-9]*:[0-9]*.[0-9]*/g,"   ") // All but the start of each timestamp line goes.
+        .replace(/.[-0-9]* --> [0-9]*:[0-9]*:[0-9]*.[0-9]*/g,"   ") // All but the start of each timestamp line goes.
         .replace(/NOTE .*?\n/g,"")  // Removes notes.
         .replace(/WEBVTT/,"") // Nulls out intro line.
         // Teams transcript items as above. Convert to tab delimited:
-        .replace(/(?<time>\d\d:\d\d:\d\d)\s*?\n<v (?<speaker>.*?)>(?<text>.*?)<\/v>\n/g, "$<time>\t$<speaker>\t$<text>" )
+        .replace(/(?<time>\d\d?:\d\d?:-?\d\d?)\s*?\n<v (?<speaker>.*?)>(?<text>.*?)<\/v>\n/g, "$<time>\t$<speaker>\t$<text>" )
         // Zoom transcript items:
         .replace(/\d*?\n(?<time>\d\d:\d\d:\d\d)\s*?\n(?<speaker>.*?): (?<text>.*?)\n/g, "$<time>\t$<speaker>\t$<text>" )
         // Occasionally Zoom doesn't put in a speaker. Put in as blank, and rely on NVivo 'fill down' or the concatenation below.
@@ -110,7 +111,7 @@ function processInput( input, timeshift, deleteShort ){
         .replace(/^\n*/, "Timespan\tSpeaker\tContent\n")
         
         /* Now look for short interjections (10 chars or less) and remove them: */
-        .replace(/(?<time>\d\d:\d\d:\d\d)\t(?<speaker>.*?)\t(?<text>[\S ]{0,10}?)\n/g, (s) => {
+        .replace(/(?<time>-?\d\d?:\d\d?:\d\d)\t(?<speaker>.*?)\t(?<text>[\S ]{0,10}?)\n/g, (s) => {
             if (deleteShort) {
                 wordsDeleted( s );
                 return "";
@@ -128,15 +129,15 @@ function processInput( input, timeshift, deleteShort ){
         To handle more than 2 in a row, we repeat it. We could do that until no more matches are found, but actually we probably want timestamps
         every minute or so, so do it three times to get up to 8 items concatenated. */
 
-        .replace(/(?<time>\d\d:\d\d:\d\d)\t(?<speaker>.*?)\t(?<text>.*?)\n\d\d:\d\d:\d\d\t(\k<speaker>|)\t/g,
+        .replace(/(?<time>\d\d?:\d\d?:-?\d\d?)\t(?<speaker>.*?)\t(?<text>.*?)\n\d\d?:\d\d?:-?\d\d?\t(\k<speaker>|)\t/g,
                                         "$<time>\t$<speaker>\t$<text>---")
-        .replace(/(?<time>\d\d:\d\d:\d\d)\t(?<speaker>.*?)\t(?<text>.*?)\n\d\d:\d\d:\d\d\t(\k<speaker>|)\t/g,
+        .replace(/(?<time>\d\d?:\d\d?:-?\d\d?)\t(?<speaker>.*?)\t(?<text>.*?)\n\d\d?:\d\d?:-?\d\d?\t(\k<speaker>|)\t/g,
                                         "$<time>\t$<speaker>\t$<text>---")
-        .replace(/(?<time>\d\d:\d\d:\d\d)\t(?<speaker>.*?)\t(?<text>.*?)\n\d\d:\d\d:\d\d\t(\k<speaker>|)\t/g,
+        .replace(/(?<time>\d\d?:\d\d?:-?\d\d?)\t(?<speaker>.*?)\t(?<text>.*?)\n\d\d?:\d\d?:-?\d\d?\t(\k<speaker>|)\t/g,
                                         "$<time>\t$<speaker>\t$<text>---")
 
         // And shift all the timestamps:
-        .replace(/\d\d:\d\d:\d\d\t/g, (e) => {
+        .replace(/\d\d?:\d\d?:-?\d\d?\t/g, (e) => {
             let hms=e.split(':');
             let seconds = parseInt(hms[0]) * 3600 + parseInt(hms[1]) * 60 + parseInt(hms[2]);
             seconds += timeshift;
@@ -156,7 +157,7 @@ function processInput( input, timeshift, deleteShort ){
         00:00:00	Jim Don't worry about the cat.
         Put .5 after the second timestamp. Won't handle triples, but they're unlikely. */
         
-        .replace(/(?<time>\d\d:\d\d:\d\d)\t(?<rest>.*?)\n\k<time>\t/g,"$<time>\t$<rest>\n$<time>.5\t")
+        .replace(/(?<time>\d\d?:\d\d?:-?\d\d?)\t(?<rest>.*?)\n\k<time>\t/g,"$<time>\t$<rest>\n$<time>.5\t")
         
         );
 }
@@ -317,8 +318,13 @@ NOTE Transcripts with speaker from Microsoft Teams
 00:00:01.000 --> 00:00:06.110
 <v Fred>I'm sorry if cats meows happened throughout this. </v>
 
-00:00:06.820 --> 00:00:07.390
+NOTE New format timestamp from Teams:
+0:0:6.820 --> 0:0:7.390
 <v Fred>The cats are rather worried at the moment.</v>
+
+NOTE Check weird negative handled (and omitted):
+0:0:-6.-820 --> 0:0:7.390
+<v Test>This should be handled OK and omitted</v>
 
 00:00:08.070 --> 00:00:08.620
 <v Joe>That sounds interesting.</v>
@@ -381,9 +387,9 @@ deleteShortOutput= processInput(testInput, -1, true);
 nonDeleteShortOutput= processInput(testInput, 0, false);
 document.getElementById("unitTestResult").innerHTML = deleteShortOutput === expectedOutput && nonDeleteShortOutput === expectedNonDeleteShortOutput ? ""
     : "Self tests failed: " +
-        (deleteShortOutput === expectedOutput ? "ND " + findError( nonDeleteShortOutput, expectedNonDeleteShortOutput ) : findError( deleteShortOutput, expectedOutput)) +
-        "<br> Please notifiy developers.";
-    
+        (deleteShortOutput === expectedOutput ? "ND " + findError( nonDeleteShortOutput, expectedNonDeleteShortOutput ) : findError( deleteShortOutput, expectedOutput))
+
+//document.getElementById("unitTestResult").appendChild(document.createTextNode(deleteShortOutput ))
 </script>
 
 <!-- ************************************ Google Analytics ****************************** -->
