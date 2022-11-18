@@ -287,6 +287,11 @@ SOFTWARE.</p>
 
 <script type="text/javascript">
 // This script runs unit tests on page load, and displays an error message if they fail.
+
+function escapeText( text ) {
+    return text.replace(/[^\S ]/g,(e) => { return encodeURIComponent(e); });
+}
+    
 function findError(actual, expected) {
     // Answers an error message with the location of the error and problem.
     actuals = actual.split("\n");
@@ -295,7 +300,7 @@ function findError(actual, expected) {
         if (! (actuals[i] === expecteds[i]))
             break;
     }
-    return "output line " + (i+1).toString() + ': expected "' + expecteds[i] + '", got "' + actuals[i] + '"';
+    return "output line " + (i+1).toString() + ': expected "' + escapeText(expecteds[i]) + '", got "' + escapeText(actuals[i]) + '"';
 }
 var testInput=`WEBVTT
 
@@ -434,8 +439,8 @@ var expectedOneDriveOutput=`Timespan\tSpeaker\tContent
 `;
 
 var tests=  [[testInput, 0, false, expectedNonDeleteShortOutput, "Basic conversion Teams/Zoom"],
-             [testInput, -1, true, expectedOutput, "Conversion with timeshift and delete short words"]
-             //[testOneDriveInput, 0, false, expectedOneDriveOutput, "OneDrive conversion"]
+             [testInput, -1, true, expectedOutput, "Conversion with timeshift and delete short words"],
+             [testOneDriveInput, 0, false, expectedOneDriveOutput, "OneDrive conversion"]
             ];
 for (test of tests) {
     foundOutput = processInput(test[0], test[1], test[2]);
