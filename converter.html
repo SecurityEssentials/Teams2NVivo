@@ -60,6 +60,14 @@ function wordsDeleted(s) {
     }
         
 }
+
+function parseHMS( hmsString ) {
+    // Parses a signed hour:minute:seconds string. E.g. -1:1:1 or -224, returning seconds.
+    let hms=hmsString.split(':');
+    let firstNumber=parseInt(hms[0]);
+    return (hms.length == 3) ? (hms[0].startsWith('-') ? -1: 1) * (Math.abs(firstNumber) * 3600 + parseInt(hms[1]) * 60 + parseInt(hms[2])) : firstNumber;
+}
+
 function processInput( input, source, timeshift, deleteShort ){
     // Does the conversion, adding timeshift seconds to each timestamp (may be negative)
     // If deleteShort, then removes short phrases.
@@ -166,8 +174,7 @@ function processInput( input, source, timeshift, deleteShort ){
 
         // And shift all the timestamps:
         .replace(/\d\d?:\d\d?:-?\d\d?\t/g, (e) => {
-            let hms=e.split(':');
-            let seconds = parseInt(hms[0]) * 3600 + parseInt(hms[1]) * 60 + parseInt(hms[2]);
+            let seconds = parseHMS(e);
             seconds += timeshift;
             let timestamp = seconds < 0 ? "--:--:--" : // Mark negative timestamps for removal.
                                 // ~~ forces integer arithmetic. PadStart zero-pads the string:
@@ -195,7 +202,7 @@ function cleanVTT(){
 
     var outputElement = document.getElementById("output")
     var filename = document.getElementById("fileName").value;
-    var timeshift = parseInt(document.getElementById("timeshift").value);
+    var timeshift = parseHMS(document.getElementById("timeshift").value);
     var deleteShort = document.getElementById("deleteShort").checked
     var source = document.getElementById("source").value
 
@@ -224,7 +231,7 @@ function download(filename) {
 function checkTimeshift() {
     // Disables the Convert and Download button if there's no input file or the timeshift is invalid.
     document.getElementById("doConvert").disabled = !
-        (document.getElementById("timeshift").value.match( /^-?\d+$/ ) &&
+        (document.getElementById("timeshift").value.match( /^-?(\d+|\d+:\d+:\d+)$/ ) && // Empty, or 1, -1, 1:1:1, -1:1:1
         document.getElementById("fileName").value.length != 0)
     }
     
@@ -245,7 +252,7 @@ function checkTimeshift() {
  
     <p>See <a href="index.html">the main page</a> for full instructions.</p>
     
-    <p>You may want to enter a time shift value in seconds to add to each timestamp (typically -10 or so), and to filter out phrases of less than 10 characters.
+    <p>You may want to enter a time shift value to add to each timestamp (e.g. -10, 1:2:1, or -0:3:4 ), and to filter out phrases of less than 10 characters.
         Then click Convert and Download to create the converted .txt file</p>
 </div>
 
