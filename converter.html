@@ -97,7 +97,7 @@ function processInput( input, timeshift, deleteShort ){
     AllWordsDeleted={};
     
     return (input
-        .replace( /[a-z0-9]*-[a-z0-9]*-[a-z0-9]*-[a-z0-9]*-[a-z0-9]*\n/g,"") // Weird MS Streams ID lines go.
+        .replace( /[a-z0-9]*-[a-z0-9]*-[a-z0-9]*-[a-z0-9]*-[a-z0-9]*(?:-[a-z0-9])?\n/g,"") // Weird MS Streams and OneDrive ID lines go.
         .replace(/.[-0-9]* --> [0-9]*:[0-9]*:[0-9]*.[0-9]*/g,"   ") // All but the start of each timestamp line goes.
         .replace(/NOTE .*?\n/g,"")  // Removes notes.
         .replace(/WEBVTT/,"") // Nulls out intro line.
@@ -371,7 +371,7 @@ var expectedOutput=`Timespan\tSpeaker\tContent
 00:00:01\tFred\tParticularly interesting
 00:00:00\tJoe\tI'm saying something.---Yes, It's very interesting.`
 
-expectedNonDeleteShortOutput=`Timespan\tSpeaker\tContent
+var expectedNonDeleteShortOutput=`Timespan\tSpeaker\tContent
 00:00:02\t\tNon-speaker captions from Microsoft Stream---Times don't matter for testing.
 00:00:00	Joe	Captions from Teams. Before start.
 00:00:01	Fred	I'm sorry if cats meows happened throughout this. ---The cats are rather worried at the moment.
@@ -383,11 +383,66 @@ expectedNonDeleteShortOutput=`Timespan\tSpeaker\tContent
 00:00:01.5	Fred	Yes?
 00:00:06	Joe	Err---Yes, It's very interesting.`
 
-deleteShortOutput= processInput(testInput, -1, true);
-nonDeleteShortOutput= processInput(testInput, 0, false);
-document.getElementById("unitTestResult").innerHTML = deleteShortOutput === expectedOutput && nonDeleteShortOutput === expectedNonDeleteShortOutput ? ""
-    : "Self tests failed: " +
-        (deleteShortOutput === expectedOutput ? "ND " + findError( nonDeleteShortOutput, expectedNonDeleteShortOutput ) : findError( deleteShortOutput, expectedOutput))
+var testOneDriveInput=`WEBVTT
+
+0a8e2f7c-5ccd-48e4-b7fa-1ea4c0496138-0
+00:00:08.710 --> 00:00:09.280
+Recording.
+
+64db795b-6b69-420c-b0ce-e07606ba2843-0
+00:00:12.860 --> 00:00:13.490
+Okay.
+
+61a57f17-2107-42eb-a4a8-b17135e1314f-0
+00:00:15.160 --> 00:00:16.060
+So welcome.
+
+992c692c-e132-45e9-80da-a2287df16dd4-0
+00:00:17.840 --> 00:00:21.587
+OK, so has been as we talked
+about just before. This project
+
+992c692c-e132-45e9-80da-a2287df16dd4-1
+00:00:21.587 --> 00:00:25.395
+is about friendship, and I'd
+like you just to think about one
+
+992c692c-e132-45e9-80da-a2287df16dd4-2
+00:00:25.395 --> 00:00:29.450
+of your friends and can you tell
+me about how you became friends?
+
+b1d0c317-bd02-4981-8f69-710b324f822b-0
+00:00:31.140 --> 00:00:35.224
+About 6 and just moved over from
+Germany and we just happened to
+
+b1d0c317-bd02-4981-8f69-710b324f822b-1
+00:00:35.224 --> 00:00:38.680
+meet and the first thing he said
+to me I know English.
+
+f8b0955b-4f85-4516-ad07-03a7ddb01364-0
+00:00:41.060 --> 00:00:43.850
+And we have just been friends
+with my best friend.
+`;
+
+var expectedOneDriveOutput=`Timespan\tSpeaker\tContent
+00:00:08\t\tRecording.---Okay.---So welcome.---OK, so has been as we talked about just before. This project---is about friendship, and I'd like you just to think about one---of your friends and can you tell me about how you became friends?---About 6 and just moved over from Germany and we just happened to---meet and the first thing he said to me I know English.
+00:00:41\t\tAnd we have just been friends with my best friend.
+`;
+
+var tests=  [[testInput, 0, false, expectedNonDeleteShortOutput, "Basic conversion Teams/Zoom"],
+             [testInput, -1, true, expectedOutput, "Conversion with timeshift and delete short words"]
+             //[testOneDriveInput, 0, false, expectedOneDriveOutput, "OneDrive conversion"]
+            ];
+for (test of tests) {
+    foundOutput = processInput(test[0], test[1], test[2]);
+    if (foundOutput !== test[3]) {
+        document.getElementById("unitTestResult").innerHTML = "Self test [" + test[4] + "] failed: " + findError( foundOutput, test[3] );
+        }
+    }
 
 //document.getElementById("unitTestResult").appendChild(document.createTextNode(deleteShortOutput ))
 </script>
