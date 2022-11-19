@@ -28,37 +28,34 @@ footer, #wordsDeleted {
 }
 </style>
 
-<!-- ****************************************** Javascript *********************************************** -->
+<!-- ****************************************** Javascript Implementation of Conversion **************************************** -->
 
 <script type="text/javascript">
 var AllWordsDeleted={};
 
 function fileChosenEvent(event){
+    // Called when the user chooses a file
+    
 	var input = event.target;
-	
 	var inputFile = input.files[0].name;
-	
-	var filename = document.getElementById("fileName")
-	filename.value = inputFile
+	document.getElementById("fileName").value = inputFile
 
 	var reader = new FileReader();
 	reader.onload = function(){
-	  var text = reader.result;
-	  var node = document.getElementById('inputData');
-	  node.value = text;
-	  
+	  document.getElementById('inputData').value = reader.result;
 	};
 	reader.readAsText(input.files[0]);
  
-    checkTimeshift()
+    refreshDisplay()
   };
   
 function wordsDeleted(s) {
-    // Remembers the words from line s that will been removed.
-    for (const i of s.split('\t')[2].split(/\W+/).filter( s => s)) { // Split third item ignoring anything that's not alphanumeric.
+    // Remembers the words from line s that will be removed.
+    
+    // Split the text element of the line into words, ignoring anything that's not alphanumeric. Filter out null strings.
+    for (const i of s.split('\t')[2].split(/\W+/).filter( s => s)) {
         AllWordsDeleted[i.toLowerCase()] = true;
     }
-        
 }
 
 function parseHMS( hmsString ) {
@@ -69,79 +66,46 @@ function parseHMS( hmsString ) {
 }
 
 function processInput( input, source, timeshift, deleteShort ){
-    // Does the conversion, adding timeshift seconds to each timestamp (may be negative)
-    // If deleteShort, then removes short phrases.
-    /* Input:
-        WEBVTT
-        NOTE stuff etc.
-
-        00:00:00.000 --> 00:00:06.110
-        <v Fred>I'm sorry if cats meows happened throughout this. </v>
-
-        00:00:06.820 --> 00:00:07.390
-        <v Fred>Uh.</v>
-
-        00:00:08.070 --> 00:00:08.620
-        <v Joe>Right?</v>
-     
-    Output:
-        Timespan    Speaker Content
-        00:00:00    Fred    I'm sorry if cats meows happened throughout this. ---Uh.
-        00:00:08    Joe Right?
-        
-    or Zoom:
-        WEBVTT
-
-        1
-        00:00:09.540 --> 00:00:12.990
-        Andrew Knight: We have that setup. Okay.
-
-        3
-        00:00:15.630 --> 00:00:17.760
-        Andrew Knight: It's like Mary Kate's here. I'll let her in.
-
-    */
-    /* See e.g. https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Regular_Expressions */
+    /* Does the conversion, adding timeshift seconds to each timestamp (may be negative)
+       If deleteShort, then removes short phrases.
+       If source is 'OneDrive', converts as OneDrive, otherwise Teams or Zoom.
+    
+    /* See unit tests below for examples of different formats.
+    This depends heavily on Regex: https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Regular_Expressions */
+    
     AllWordsDeleted={};
     
-   var afterInitialCleaning=(input
+   // Initial cleaning for all formats. Remove unwanted crud.
+    var afterInitialCleaning=(input
         .replace( /[a-z0-9]*-[a-z0-9]*-[a-z0-9]*-[a-z0-9]*-[a-z0-9]*(?:-[a-z0-9])?\n/g,"") // Weird MS Streams and OneDrive ID lines go.
         .replace(/.[-0-9]* --> [0-9]*:[0-9]*:[0-9]*.[0-9]*/g,"   ") // All but the start of each timestamp line goes.
         .replace(/NOTE .*?\n/g,"")  // Removes notes.
         .replace(/WEBVTT/,"") // Nulls out intro line.
         )
         
-    var asTabSeparated= (source==='Teams') ? (afterInitialCleaning
-        // Teams transcript items as above. Convert to tab delimited:
+    // Now convert to tab separated. Depends on source selected by user:
+    var asTabSeparated= (source==='Teams') ?
+    
+        // Source is Teams or Zoom:
+        (afterInitialCleaning
+        // Teams: Single line follows each timestamp. Text in <v> tags with speaker in opening tag.
         .replace(/(?<time>\d\d?:\d\d?:-?\d\d?)\s*?\n<v (?<speaker>.*?)>(?<text>.*?)<\/v>\n/g, "$<time>\t$<speaker>\t$<text>" )
 
-        // Zoom transcript items:
+        // Zoom: Single line follows each timestamp. Speaker: text
         .replace(/\d*?\n(?<time>\d\d:\d\d:\d\d)\s*?\n(?<speaker>.*?): (?<text>.*?)\n/g, "$<time>\t$<speaker>\t$<text>" )
         // Occasionally Zoom doesn't put in a speaker. Put in as blank, and rely on NVivo 'fill down' or the concatenation below.
         .replace(/\d*?\n(?<time>\d\d:\d\d:\d\d)\s*?\n(?<text>.*?)\n/g, "$<time>\t\t$<text>" )
-        ) : (afterInitialCleaning
-        // WhatsIts transcript items.
-        /*
-
-        00:00:08
-        Recording.
-
-        00:00:12
-        Okay.
-
-        00:00:15
-        So welcome.
-
-        00:00:17
-        OK, so has been as we talked
-        about just before. This project
-        */
-        .replace(/\n(?<time>\d\d:\d\d:\d\d)\s*\n(?<text>.*?)/g, "$<time>\t\t$<text>" )
+        ) :
         
+        // Source is OneDrive
+        (afterInitialCleaning
+        // OneDrive: 1-2 lines follow each timestamp. No speaker.
+        .replace(/\n(?<time>\d\d:\d\d:\d\d)\s*\n(?<text>.*?)/g, "$<time>\t\t$<text>" )
         // Compose the pairs of lines. Any non-timestamp line is the second of the pair:
         .replace(/(?<line1>\d\d:\d\d:\d\d\t\t.*)\n(?<line2>(?!\d\d:\d\d:\d\d\t?)\w.*)/g, "$<line1> $<line2>" )
         )
         
+    // And then work on the tab-separated times, adding headings, concatenating multiple lines, removing short lines, adjusting timestamps.
     return (asTabSeparated
         // Take out initial blank lines, and replace with column headings:
         .replace(/^\n*/, "Timespan\tSpeaker\tContent\n")
@@ -193,42 +157,35 @@ function processInput( input, source, timeshift, deleteShort ){
         Put .5 after the second timestamp. Won't handle triples, but they're unlikely. */
         
         .replace(/(?<time>\d\d?:\d\d?:-?\d\d?)\t(?<rest>.*?)\n\k<time>\t/g,"$<time>\t$<rest>\n$<time>.5\t")
-        
         );
 }
 
-function cleanVTT(){
+function cleanVTT() {
+    // Called when the user clicks Convert and Download. Creates the processed file.
+    
     var input = document.getElementById("inputData").value
-
-    var outputElement = document.getElementById("output")
     var filename = document.getElementById("fileName").value;
     var timeshift = parseHMS(document.getElementById("timeshift").value);
     var deleteShort = document.getElementById("deleteShort").checked
     var source = document.getElementById("source").value
 
-    outputElement.value = processInput( input, source, timeshift, deleteShort )
+    var processedFileContents = processInput( input, source, timeshift, deleteShort )
     document.getElementById("wordsDeleted").innerHTML = Object.keys(AllWordsDeleted).join(' '); // Safe, since all non-alphanum filtered out in WordsDeleted().
-    download(filename);
-}
 
-
-function download(filename) {
-    // Saves the contents of element 'output' to file filename, replacing its extension with .txt
-	filename = filename.replace(/.vtt$/i, ".txt");
-	var input = document.getElementById("output").value
+    // Destination filename has extension .txt
+    filename = filename.replace(/.vtt$/i, ".txt");
+ 
+    // Creates an invisible element that, on click, downloads the result as that file.
 	var element = document.createElement('a');
-	element.setAttribute('href', 'data:text/plain;charset=utf-8,' + encodeURIComponent(input));
+	element.setAttribute('href', 'data:text/plain;charset=utf-8,' + encodeURIComponent(processedFileContents));
 	element.setAttribute('download', filename);
-
 	element.style.display = 'none';
 	document.body.appendChild(element);
-
 	element.click();
-
 	document.body.removeChild(element);
 }
 
-function checkTimeshift() {
+function refreshDisplay() {
     // Disables the Convert and Download button if there's no input file or the timeshift is invalid.
     document.getElementById("doConvert").disabled = !
         (document.getElementById("timeshift").value.match( /^-?(\d+|\d+:\d+:\d+)$/ ) && // Empty, or 1, -1, 1:1:1, -1:1:1
@@ -269,24 +226,18 @@ function checkTimeshift() {
           <option value="OneDrive">OneDrive</option>
         </select><br/>
         <label for="timeshift">Time shift (advanced):</label>
-        <input type="text" id="timeshift" name="timeshift" value=0 onChange="checkTimeshift()"><br/>
+        <input type="text" id="timeshift" name="timeshift" value=0 onChange="refreshDisplay()"><br/>
         <label for="deleteShort">Filter out short phrases (advanced):</label>
         <input type="checkbox" id="deleteShort" name="deleteShort" value=false><br/>
 		<input type="button" id="doConvert" onclick="cleanVTT();" disabled value="Convert and Download"/>
 	</form>
 </div>
 
-<!-- Dummy textareas to hold the input and output file contents -->
+<!-- Dummy textarea to hold the input file contents -->
 <div id="inputDiv" style="display: none;">
 	<p>Input</p>
 	<textarea id="inputData" name="inputData"  >
 		</textarea>	
-</div>
-
-<div id="outputDiv" style="display: none;">
-	<p>Output</p>
-	<textarea id="output" >
-	</textarea>
 </div>
 
 <p>Words filtered: <span id="wordsDeleted"/></p>
@@ -299,8 +250,8 @@ citing the browser used, the operating system, the issue, and (always, please) a
 
 <footer id="footer">
 
-<p>Copyright (c) 2021 Charles Weir <br/>
-Portions Copyright (c) 2020 Tim Ellis</p>
+<p>Copyright &copy;2022 Charles Weir <br/>
+Portions Copyright &copy;2020 Tim Ellis</p>
 
 <p>Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -312,13 +263,14 @@ furnished to do so, subject to the following conditions:</p>
 <p>The above copyright notice and this permission notice shall be included in all
 copies or substantial portions of the Software.</p>
 
-<p>THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.</p>
+<p>The software is provided "as is", without warranty of any kind, express or
+ implied, including but not limited to the warranties of merchantability,
+ fitness for a particular purpose and noninfringement. In no event shall the
+ authors or copyright holders be liable for any claim, damages or other
+ liability, whether in an action of contract, tort or otherwise, arising from,
+ out of or in connection with the software or the use or other dealings in the
+ software.
+</p>
     
   </div>
 </div>
@@ -330,20 +282,6 @@ SOFTWARE.</p>
 <script type="text/javascript">
 // This script runs unit tests on page load, and displays an error message if they fail.
 
-function escapeText( text ) {
-    return text.replace(/[^\S ]/g,(e) => { return encodeURIComponent(e); });
-}
-    
-function findError(actual, expected) {
-    // Answers an error message with the location of the error and problem.
-    actuals = actual.split("\n");
-    expecteds = expected.split("\n")
-    for (var i = 0; (actuals[i] === expecteds[i]); i++) {
-        if (i>=Math.min(actuals.length, expecteds.length)-1)
-            return "non matching lines at end: expected " + (expecteds.length).toString() + " lines, got " + (actuals.length).toString();
-    }
-    return "output line " + (i+1).toString() + ': expected "' + escapeText(expecteds[i]) + '", got "' + escapeText(actuals[i]) + '"';
-}
 var testInput=`WEBVTT
 
 NOTE Confidence: 0.648119294
@@ -478,14 +416,40 @@ var expectedOneDriveOutput=`Timespan\tSpeaker\tContent
 00:00:08\t\tRecording.---Okay.---So welcome.---OK, so has been as we talked about just before. This project---is about friendship, and I'd like you just to think about one---of your friends and can you tell me about how you became friends?---About 6 and just moved over from Germany and we just happened to---meet and the first thing he said to me I know English.
 00:00:41\t\tAnd we have just been friends with my best friend.`;
 
-var tests=  [[testInput, 'Teams', 0, false, expectedNonDeleteShortOutput, "Basic conversion Teams/Zoom"],
-             [testInput, 'Teams', -1, true, expectedOutput, "Conversion with timeshift and delete short words"],
-             [testOneDriveInput, 'OneDrive', 0, false, expectedOneDriveOutput, "OneDrive conversion"]
+// ----------------------------------------------------------------------------------------
+// Code to run the tests and display meaningful error messages.
+
+function escapeText( text ) {
+    // Show special characters like tabs and CRs in the output:
+    return text.replace(/[^\S ]/g,(e) => { return encodeURIComponent(e); });
+}
+    
+function findError(actual, expected) {
+    // Answers an error message with the location of the error and problem.
+    actuals = actual.split("\n");
+    expecteds = expected.split("\n")
+    for (var i = 0; (actuals[i] === expecteds[i]); i++) {
+        if (i>=Math.min(actuals.length, expecteds.length)-1)
+            return "non matching lines at end: expected " + expecteds.length.toString() + " lines, got " + actuals.length.toString();
+    }
+    return "output line " + (i+1).toString() + ': expected "' + escapeText(expecteds[i]) + '", got "' + escapeText(actuals[i]) + '"';
+}
+
+//           Input file        Converter  Offset DelShort?   ExpectedOutput            WordsDld  TestDescription
+var tests=  [[testInput,         'Teams',    0,  false, expectedNonDeleteShortOutput,  '',       "Basic conversion Teams/Zoom"],
+             [testInput,         'Teams',    -1, true,  expectedOutput,                'yes err',"Conversion with timeshift and delete short words"],
+             [testOneDriveInput, 'OneDrive', 0,  false, expectedOneDriveOutput,        '',       "OneDrive conversion"]
             ];
 for (test of tests) {
     foundOutput = processInput(test[0], test[1], test[2], test[3]);
     if (foundOutput !== test[4]) {
-        document.getElementById("unitTestResult").innerHTML = "Self test [" + test[5] + "] failed: " + findError( foundOutput, test[4] );
+        document.getElementById("unitTestResult").innerHTML = "Self test [" + test[6] + "] failed: " + findError( foundOutput, test[4] );
+        break;
+        }
+    else if (Object.keys(AllWordsDeleted).join(' ') !== test[5]) {
+        document.getElementById("unitTestResult").innerHTML = "Self test [" + test[6] + "] wrong words deleted. Expected " + test[5] +
+                ', got ' + Object.keys(AllWordsDeleted).join(' ');
+        break;
         }
     }
 
