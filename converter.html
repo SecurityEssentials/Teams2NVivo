@@ -145,7 +145,7 @@ function parseHMS( hmsString ) {
     // Parses a signed hour:minute:seconds string. E.g. -1:1:1 or -224, returning seconds.
     let hms=hmsString.split(':');
     let firstNumber=parseInt(hms[0]);
-    return (hms.length == 3) ? (firstNumber<0 ? -1: 1) * (Math.abs(firstNumber) * 3600 + parseInt(hms[1]) * 60 + parseInt(hms[2])) : firstNumber;
+    return (hms.length == 3) ? (hms[0].startsWith('-') ? -1: 1) * (Math.abs(firstNumber) * 3600 + parseInt(hms[1]) * 60 + parseInt(hms[2])) : firstNumber;
 }
 
 // ****************************************** Javascript User Interface ****************************************
@@ -437,7 +437,8 @@ var parseTests=[
     ['1:1:1', 3661],
     ['-1:1:1', -3661],
     ['01:01:01', 3661],
-    ['0:2:0', 120]
+    ['0:2:0', 120],
+    ['-0:4:0', -240]
 ];
 // ----------------------------------------------------------------------------------------
 // Code to run the tests and display meaningful error messages.
