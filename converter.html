@@ -429,9 +429,24 @@ var expectedOneDriveOutput=`Timespan\tSpeaker\tContent
 00:00:08\t\tRecording.---Okay.---So welcome.---OK, so has been as we talked about just before. This project---is about friendship, and I'd like you just to think about one---of your friends and can you tell me about how you became friends?---About 6 and just moved over from Germany and we just happened to---meet and the first thing he said to me I know English.
 00:00:41\t\tAnd we have just been friends with my best friend.`;
 
+var parseTests=[
+    ['0', 0],
+    ['-2', -2],
+    ['0:0:0', 0],
+    ['1:1:1', 3661],
+    ['-1:1:1', -3661],
+    ['01:01:01', 3661],
+    ['0:2:0', 120]
+];
 // ----------------------------------------------------------------------------------------
 // Code to run the tests and display meaningful error messages.
 
+for (test of parseTests) {
+    if (parseHMS( test[0] ) != test[1]) {
+        document.getElementById("unitTestResult").innerHTML = "Unit test failed: Parsed " + test[0] + ", expected " + test[1] + ", got " + parseHMS( test[0] )
+        }
+        
+    }
 function escapeText( text ) {
     // Show special characters like tabs and CRs in the output:
     return text.replace(/[^\S ]/g,(e) => { return encodeURIComponent(e); });
@@ -466,7 +481,6 @@ for (test of tests) {
         break;
         }
     }
-
 </script>
 
 <!-- ************************************ Google Analytics ****************************** -->
