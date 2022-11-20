@@ -150,18 +150,14 @@ function parseHMS( hmsString ) {
 
 // ****************************************** Javascript User Interface ****************************************
 
+var ChosenFileBlob;
 function fileChosenEvent(event){
     // Called when the user chooses a file
     
 	var input = event.target;
+    ChosenFileBlob = input.files[0];
 	var inputFile = input.files[0].name;
 	document.getElementById("fileName").value = inputFile
-	var reader = new FileReader();
-	reader.onload = function(){
-	  document.getElementById('inputData').value = reader.result;
-	};
-	reader.readAsText(input.files[0]);
- 
     document.getElementById("timeshift").value="0";
     refreshDisplay()
   };
@@ -169,26 +165,31 @@ function fileChosenEvent(event){
 function cleanVTT() {
     // Called when the user clicks Convert and Download. Creates the processed file.
     
-    var input = document.getElementById("inputData").value
-    var filename = document.getElementById("fileName").value;
-    var timeshift = parseHMS(document.getElementById("timeshift").value);
-    var deleteShort = document.getElementById("deleteShort").checked
-    var source = document.getElementById("source").value
+    var reader = new FileReader();
+	reader.onload = function() {
+        var input = reader.result.replace(/(\r\n|\n\r|\r)/g, '\n')
+        var filename = document.getElementById("fileName").value;
+        var timeshift = parseHMS(document.getElementById("timeshift").value);
+        var deleteShort = document.getElementById("deleteShort").checked
+        var source = document.getElementById("source").value
 
-    var processedFileContents = processInput( input, source, timeshift, deleteShort )
-    document.getElementById("wordsDeleted").innerHTML = Object.keys(AllWordsDeleted).join(' '); // Safe, since all non-alphanum filtered out in WordsDeleted().
+        var processedFileContents = processInput( input, source, timeshift, deleteShort )
+        document.getElementById("wordsDeleted").innerHTML = Object.keys(AllWordsDeleted).join(' '); // Safe, since all non-alphanum filtered out in WordsDeleted().
 
-    // Destination filename has extension .txt
-    filename = filename.replace(/.vtt$/i, ".txt");
- 
-    // Creates an invisible element that, on click, downloads the result as that file.
-	var element = document.createElement('a');
-	element.setAttribute('href', 'data:text/plain;charset=utf-8,' + encodeURIComponent(processedFileContents));
-	element.setAttribute('download', filename);
-	element.style.display = 'none';
-	document.body.appendChild(element);
-	element.click();
-	document.body.removeChild(element);
+        // Destination filename has extension .txt
+        filename = filename.replace(/.vtt$/i, ".txt");
+     
+        // Creates an invisible element that, on click, downloads the result as that file.
+        var element = document.createElement('a');
+        element.setAttribute('href', 'data:text/plain;charset=utf-8,' + encodeURIComponent(processedFileContents));
+        element.setAttribute('download', filename);
+        element.style.display = 'none';
+        document.body.appendChild(element);
+        element.click();
+        document.body.removeChild(element);
+        };
+
+	reader.readAsText(ChosenFileBlob);
 }
 
 function refreshDisplay() {
@@ -445,8 +446,8 @@ for (test of parseTests) {
     if (parseHMS( test[0] ) != test[1]) {
         document.getElementById("unitTestResult").innerHTML = "Unit test failed: Parsed " + test[0] + ", expected " + test[1] + ", got " + parseHMS( test[0] )
         }
-        
     }
+    
 function escapeText( text ) {
     // Show special characters like tabs and CRs in the output:
     return text.replace(/[^\S ]/g,(e) => { return encodeURIComponent(e); });
