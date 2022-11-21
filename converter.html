@@ -42,6 +42,8 @@ function processInput( input, source, timeshift, deleteShort ){
     This depends heavily on Regex: https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Regular_Expressions */
     
     AllWordsDeleted={};
+    var latestTimestamp=timeshift; // Earliest timestamp will be that.
+    var currentTimestampIncrement=0;
     
    // Initial cleaning for all formats. Remove unwanted crud.
     var afterInitialCleaning=(input
@@ -108,27 +110,27 @@ function processInput( input, source, timeshift, deleteShort ){
         .replace(/(?<time>\d\d?:\d\d?:-?\d\d?)\t(?<speaker>.*?)\t(?<text>.*?)\n\d\d?:\d\d?:-?\d\d?\t(\k<speaker>|)\t/g,
                                         "$<time>\t$<speaker>\t$<text>---")
 
-        // And shift all the timestamps:
+        // And shift all the timestamps, checking for monotonicly increasing timestamps. If we don't find them, we use the previous timestamp,
+        // and add .1, .2 etc., until the timestamp does increase.
+        
         .replace(/\d\d?:\d\d?:-?\d\d?\t/g, (e) => {
             let seconds = parseHMS(e);
             seconds += timeshift;
+            seconds=Math.max(seconds,latestTimestamp);
+            currentTimestampIncrement=(seconds<=latestTimestamp) ? currentTimestampIncrement+1 : 0;
+            latestTimestamp=seconds;
+            
             let timestamp = seconds < 0 ? "--:--:--" : // Mark negative timestamps for removal.
                                 // ~~ forces integer arithmetic. PadStart zero-pads the string:
                                 (~~(seconds / 3600)).toString().padStart(2,'0') + ':' +
                                 (~~((seconds % 3600) / 60)).toString().padStart(2,'0') + ':' +
-                                (seconds % 60).toString().padStart(2,'0');
+                                (seconds % 60).toString().padStart(2,'0')
+                                + (currentTimestampIncrement > 0 ? '.'+currentTimestampIncrement.toString() : '');
             return timestamp + '\t';
             })
         
         // Remove items with negative timestamps:
         .replace(/--:--:--\t.*\n/g,"")
-        
-        /* And we need also to check for duplicate timestamps, which NVivo rejects
-        00:00:00	Fred	I'm sorry if cat meows
-        00:00:00	Jim Don't worry about the cat.
-        Put .5 after the second timestamp. Won't handle triples, but they're unlikely. */
-        
-        .replace(/(?<time>\d\d?:\d\d?:-?\d\d?)\t(?<rest>.*?)\n\k<time>\t/g,"$<time>\t$<rest>\n$<time>.5\t")
         );
 }
 
@@ -306,76 +308,95 @@ NOTE Confidence: 0.648119294
 Times don't matter for testing.
 
 NOTE Transcripts with speaker from Microsoft Teams
-00:00:00.000 --> 00:00:06.110
+00:00:08.000 --> 00:00:06.110
 <v Joe>Captions from Teams. Before start.</v>
 
-00:00:01.000 --> 00:00:06.110
+00:01:01.000 --> 00:00:06.110
 <v Fred>I'm sorry if cats meows happened throughout this. </v>
 
 NOTE New format timestamp from Teams:
-0:0:6.820 --> 0:0:7.390
+0:1:6.820 --> 0:0:7.390
 <v Fred>The cats are rather worried at the moment.</v>
 
 NOTE Check weird negative handled (and omitted):
-0:0:-6.-820 --> 0:0:7.390
-<v Test>This should be handled OK and omitted</v>
+0:1:-6.-820 --> 0:0:7.390
+<v Test>This should be handled OK</v>
 
-00:00:08.070 --> 00:00:08.620
+00:02:08.070 --> 00:00:08.620
 <v Joe>That sounds interesting.</v>
 
 NOTE Zoom transcripts (occasionally omit the speaker)
 2
-00:00:09.540 --> 00:00:12.990
+00:03:09.540 --> 00:00:12.990
 Andrew Knight: Captions from Zoom. Okay.
 
 3
-00:00:15.540 --> 00:00:18.990
+00:03:15.540 --> 00:00:18.990
 More captions.
 
 NOTE Testing only 8 items concatenated. Use pre-converted data:
-00:00:01\tFred\tParticularly interesting
-00:00:01\tFred\tParticularly interesting
-00:00:01\t\tParticularly interesting
-00:00:01\t\tParticularly interesting
-00:00:01\tFred\tParticularly interesting
-00:00:01\tFred\tParticularly interesting
-00:00:01\tFred\tParticularly interesting
-00:00:01\tFred\tParticularly interesting
-00:00:02\tFred\tParticularly interesting
+00:04:16\tFred\tParticularly interesting
+00:04:17\tFred\tParticularly interesting
+00:04:18\t\tParticularly interesting
+00:04:19\t\tParticularly interesting
+00:04:20\tFred\tParticularly interesting
+00:04:21\tFred\tParticularly interesting
+00:04:22\tFred\tParticularly interesting
+00:04:23\tFred\tParticularly interesting
+00:04:24\tFred\tParticularly interesting
 NOTE Testing removing short interjections:
-00:00:01.000 --> 00:01:06.110
+00:05:30.000 --> 00:01:06.110
 <v Joe>I'm saying something.</v>
 
-00:00:01.000 --> 00:00:06.110
+00:05:31.000 --> 00:00:06.110
 <v Fred>Yes?</v>
 
-00:00:06.820 --> 00:00:07.390
+00:05:32.820 --> 00:00:07.390
 <v Joe>Err</v>
 
-00:00:08.070 --> 00:00:08.620
+00:05:33.070 --> 00:00:08.620
 <v Joe>Yes, It's very interesting.</v>
+
+NOTE Sometimes we get timestamps out of sequence. Check here for triple duplicates as well.
+00:06:01\tSpeaker 1\tRepeating timestamp
+00:06:01\tSpeaker 2\tRepeating timestamp
+00:06:01\tSpeaker 3\tRepeating timestamp
+00:06:00\tSpeaker 4\tDecreasing timestamp
 `;
 
+// Conversion with timeshift and remove short phrases. Time shifted back one minute:
 var expectedOutput=`Timespan\tSpeaker\tContent
-00:00:01\t\tNon-speaker captions from Microsoft Stream---Times don't matter for testing.
-00:00:00\tFred\tI'm sorry if cats meows happened throughout this. ---The cats are rather worried at the moment.
-00:00:07\tJoe\tThat sounds interesting.
-00:00:08\tAndrew Knight\tCaptions from Zoom. Okay.---More captions.
-00:00:00\tFred\tParticularly interesting---Particularly interesting---Particularly interesting---Particularly interesting---Particularly interesting---Particularly interesting---Particularly interesting---Particularly interesting
-00:00:01\tFred\tParticularly interesting
-00:00:00\tJoe\tI'm saying something.---Yes, It's very interesting.`
+00:00:01\tFred\tI'm sorry if cats meows happened throughout this. ---The cats are rather worried at the moment.
+00:00:01.1\tTest\tThis should be handled OK
+00:01:08\tJoe\tThat sounds interesting.
+00:02:09\tAndrew Knight\tCaptions from Zoom. Okay.---More captions.
+00:03:16\tFred\tParticularly interesting---Particularly interesting---Particularly interesting---Particularly interesting---Particularly interesting---Particularly interesting---Particularly interesting---Particularly interesting
+00:03:24\tFred\tParticularly interesting
+00:04:30\tJoe\tI'm saying something.---Yes, It's very interesting.
+00:05:01\tSpeaker 1\tRepeating timestamp
+00:05:01.1\tSpeaker 2\tRepeating timestamp
+00:05:01.2\tSpeaker 3\tRepeating timestamp
+00:05:01.3\tSpeaker 4\tDecreasing timestamp
+`
 
+// Basic conversion Teams/Zoom.
 var expectedNonDeleteShortOutput=`Timespan\tSpeaker\tContent
 00:00:02\t\tNon-speaker captions from Microsoft Stream---Times don't matter for testing.
-00:00:00	Joe	Captions from Teams. Before start.
-00:00:01	Fred	I'm sorry if cats meows happened throughout this. ---The cats are rather worried at the moment.
-00:00:08	Joe	That sounds interesting.
-00:00:09	Andrew Knight	Captions from Zoom. Okay.---More captions.
-00:00:01	Fred	Particularly interesting---Particularly interesting---Particularly interesting---Particularly interesting---Particularly interesting---Particularly interesting---Particularly interesting---Particularly interesting
-00:00:02	Fred	Particularly interesting
-00:00:01	Joe	I'm saying something.
-00:00:01.5	Fred	Yes?
-00:00:06	Joe	Err---Yes, It's very interesting.`
+00:00:08\tJoe\tCaptions from Teams. Before start.
+00:01:01\tFred\tI'm sorry if cats meows happened throughout this. ---The cats are rather worried at the moment.
+00:01:01.1\tTest\tThis should be handled OK
+00:02:08\tJoe\tThat sounds interesting.
+00:03:09\tAndrew Knight\tCaptions from Zoom. Okay.---More captions.
+00:04:16\tFred\tParticularly interesting---Particularly interesting---Particularly interesting---Particularly interesting---Particularly interesting---Particularly interesting---Particularly interesting---Particularly interesting
+00:04:24\tFred\tParticularly interesting
+00:05:30\tJoe	I'm saying something.
+00:05:31\tFred	Yes?
+00:05:32\tJoe\tErr---Yes, It's very interesting.
+00:06:01\tSpeaker 1\tRepeating timestamp
+00:06:01.1\tSpeaker 2\tRepeating timestamp
+00:06:01.2\tSpeaker 3\tRepeating timestamp
+00:06:01.3\tSpeaker 4\tDecreasing timestamp
+`
 
 var testOneDriveInput=`WEBVTT
 
@@ -467,7 +488,7 @@ function findError(actual, expected) {
 
 //           Input file        Converter  Offset DelShort?   ExpectedOutput            WordsDld  TestDescription
 var tests=  [[testInput,         'Teams',    0,  false, expectedNonDeleteShortOutput,  '',       "Basic conversion Teams/Zoom"],
-             [testInput,         'Teams',    -1, true,  expectedOutput,                'yes err',"Conversion with timeshift and delete short words"],
+             [testInput,         'Teams',    -60, true,  expectedOutput,                'yes err',"Conversion with timeshift and remove short phrases"],
              [testOneDriveInput, 'OneDrive', 0,  false, expectedOneDriveOutput,        '',       "OneDrive conversion"]
             ];
 for (test of tests) {
