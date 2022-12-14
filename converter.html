@@ -47,7 +47,7 @@ function processInput( input, source, timeshift, deleteShort ){
     
    // Initial cleaning for all formats. Remove unwanted crud.
     var afterInitialCleaning=(input
-        .replace( /[a-z0-9]*-[a-z0-9]*-[a-z0-9]*-[a-z0-9]*-[a-z0-9]*(?:-[a-z0-9])?\n/g,"") // Weird MS Streams and OneDrive ID lines go.
+        .replace( /[a-f0-9]+-[a-f0-9]+-[a-f0-9]+-[a-f0-9]*-.*?\n/g,"") // Weird MS Streams and OneDrive ID lines go.
         .replace(/.[-0-9]* --> [0-9]*:[0-9]*:[0-9]*.[0-9]*/g,"   ") // All but the start of each timestamp line goes.
         .replace(/NOTE .*?\n/g,"")  // Removes notes.
         .replace(/WEBVTT/,"") // Nulls out intro line.
@@ -230,8 +230,8 @@ function refreshDisplay() {
         
         <label for="source">Select transcript source:</label>
         <select name="source" id="source">
-          <option value="Teams">Teams/Zoom</option>
-          <option value="OneDrive">OneDrive</option>
+          <option value="OneDrive">Teams or OneDrive</option>
+          <option value="Teams">Old Teams or Zoom</option>
         </select><br/>
         
         <label for="timeshift">Time shift (advanced):</label>
@@ -301,9 +301,9 @@ NOTE Confidence: 0.648119294
 00:00:02.160 --> 00:00:06.560
 Non-speaker captions from Microsoft Stream
 
-NOTE Confidence: 0.648119294
+NOTE New format from Microsoft teams as at 12/12/2022
 
-7e46607a-d03d-44be-bbc5-6c0a9c898ec9
+b05cbc69-3364-4c0c-a05b-70f360077a3c/7-0
 00:00:06.560 --> 00:00:07.967
 Times don't matter for testing.
 
