@@ -51,12 +51,12 @@ function processInput( input, source, timeshift, deleteShort ){
         .replace(/.[-0-9]* --> [0-9]*:[0-9]*:[0-9]*.[0-9]*/g,"   ") // All but the start of each timestamp line goes.
         .replace(/NOTE .*?\n/g,"")  // Removes notes.
         .replace(/WEBVTT/,"") // Nulls out intro line.
-        )
+        );
         
     // Now convert to tab separated. Depends on source selected by user:
     var asTabSeparated= (source==='Teams') ?
     
-        // Source is Teams or Zoom:
+        // Source is Old Teams or Zoom:
         (afterInitialCleaning
         // Teams: Single line follows each timestamp. Text in <v> tags with speaker in opening tag.
         .replace(/(?<time>\d\d?:\d\d?:-?\d\d?)\s*?\n<v (?<speaker>.*?)>(?<text>.*?)<\/v>\n/g, "$<time>\t$<speaker>\t$<text>" )
@@ -67,7 +67,7 @@ function processInput( input, source, timeshift, deleteShort ){
         .replace(/\d*?\n(?<time>\d\d:\d\d:\d\d)\s*?\n(?<text>.*?)\n/g, "$<time>\t\t$<text>" )
         ) :
         
-        // Source is OneDrive:
+        // Source is New Teams or OneDrive:
         (afterInitialCleaning
         // OneDrive: 1-2 lines follow each timestamp. No speaker. Occasionally just empty line.
         .replace(/\n(?<time>\d\d:\d\d:\d\d)\s*\n(?<text>(?!\d\d:\d\d:\d\d\t?)\w.*?)/g, "$<time>\t\t$<text>" )
@@ -75,7 +75,7 @@ function processInput( input, source, timeshift, deleteShort ){
         .replace(/\n\d\d:\d\d:\d\d\s*\n/g, "")
         // Compose the pairs of lines. Any non-timestamp line is the second of the pair:
         .replace(/(?<line1>\d\d:\d\d:\d\d\t\t.*)\n(?<line2>(?!\d\d:\d\d:\d\d\t?)\w.*)/g, "$<line1> $<line2>" )
-        )
+        );
     //console.log(afterInitialCleaning)
     //console.log(asTabSeparated);
     
@@ -159,9 +159,9 @@ function fileChosenEvent(event){
 	var input = event.target;
     ChosenFileBlob = input.files[0];
 	var inputFile = input.files[0].name;
-	document.getElementById("fileName").value = inputFile
+	document.getElementById("fileName").value = inputFile;
     document.getElementById("timeshift").value="0";
-    refreshDisplay()
+    refreshDisplay();
   };
   
 function cleanVTT() {
@@ -169,15 +169,16 @@ function cleanVTT() {
     
     var reader = new FileReader();
 	reader.onload = function() {
-        var input = reader.result.replace(/(\r\n|\n\r|\r)/g, '\n')
+        var input = reader.result.replace(/(\r\n|\n\r|\r)/g, '\n');
         var filename = document.getElementById("fileName").value;
         var timeshift = parseHMS(document.getElementById("timeshift").value);
-        var deleteShort = document.getElementById("deleteShort").checked
-        var source = document.getElementById("source").value
+        var deleteShort = document.getElementById("deleteShort").checked;
+        var source = document.getElementById("source").value;
 
-        var processedFileContents = processInput( input, source, timeshift, deleteShort )
+        var processedFileContents = processInput( input, source, timeshift, deleteShort );
         document.getElementById("wordsDeleted").innerHTML = Object.keys(AllWordsDeleted).join(' '); // Safe, since all non-alphanum filtered out in WordsDeleted().
-
+        //document.getElementById("wordsDeletedIntro").style.display = AllWordsDeleted.size > 0 ? 'compact' : 'none'; // Dunno why this doesn't work.
+        
         // Destination filename has extension .txt
         filename = filename.replace(/.vtt$/i, ".txt");
      
@@ -198,7 +199,7 @@ function refreshDisplay() {
     // Disables the Convert and Download button if there's no input file or the timeshift is invalid.
     document.getElementById("doConvert").disabled = !
         (document.getElementById("timeshift").value.match( /^-?(\d+|\d+:\d+:\d+)$/ ) && // Empty, or 1, -1, 1:1:1, -1:1:1
-        document.getElementById("fileName").value.length != 0)
+        document.getElementById("fileName").value.length != 0);
     }
     
 </script>
@@ -251,7 +252,7 @@ function refreshDisplay() {
 		</textarea>	
 </div>
 
-<p>Words filtered: <span id="wordsDeleted"/></p>
+<p id='wordsDeletedIntro'">Words filtered: <span id="wordsDeleted"/></p>
 <p id="unitTestResult" ></p>
     
 <p> If you find a bug in the converter, or want to suggest an improvement, please report it in the <a href="https://github.com/SecurityEssentials/Teams2NVivo/issues">project issue tracker here</a>,
