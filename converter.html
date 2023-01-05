@@ -39,7 +39,9 @@ function processInput( input, source, timeshift, deleteShort ){
        If source is 'OneDrive', converts as OneDrive, otherwise Teams or Zoom.
     
     /* See unit tests below for examples of different formats.
-    This depends heavily on Regex: https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Regular_Expressions */
+    This depends heavily on Regex: https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Regular_Expressions
+    Use https://regex101.com/ to test regexes, and the Chrome debugger to capture intermediate values in the unit tests.
+    */
     
     AllWordsDeleted={};
     var latestTimestamp=timeshift; // Earliest timestamp will be that.
@@ -70,11 +72,16 @@ function processInput( input, source, timeshift, deleteShort ){
         // Source is New Teams or OneDrive:
         (afterInitialCleaning
         // OneDrive: 1-2 lines follow each timestamp. No speaker. Occasionally just empty line.
-        .replace(/\n(?<time>\d\d:\d\d:\d\d)\s*\n(?<text>(?!\d\d:\d\d:\d\d\t?)\w.*?)/g, "$<time>\t\t$<text>" )
-        // Empty line appears here as a single timestamp line with cr before and after. Just kill it here.
-        .replace(/\n\d\d:\d\d:\d\d\s*\n/g, "")
+        
+        // Empty line appears here as a single timestamp line with two crs after. Kill it.
+        .replace(/\n\d\d:\d\d:\d\d\s*\n\s*\n/g, "\n")
+        
+        // Now take the timestamp and the first line.
+        // (Note - there's a javascript regex bug somewhere in matching null values for the text field here - so we removed null lines in the previous step)
+        .replace(/\n(?<time>\d\d:\d\d:\d\d)\s*\n(?<text>(?!\d\d:\d\d:\d\d\t?).*)/g, "$<time>\t\t$<text>" )
+        
         // Compose the pairs of lines. Any non-timestamp line is the second of the pair:
-        .replace(/(?<line1>\d\d:\d\d:\d\d\t\t.*)\n(?<line2>(?!\d\d:\d\d:\d\d\t?)\w.*)/g, "$<line1> $<line2>" )
+        .replace(/(?<line1>\d\d:\d\d:\d\d\t\t.*)\n(?<line2>(?!\d\d:\d\d:\d\d\t?)\S.*)/g, "$<line1> $<line2>" )
         );
     //console.log(afterInitialCleaning)
     //console.log(asTabSeparated);
@@ -409,14 +416,15 @@ Recording.
 00:00:12.860 --> 00:00:13.490
 Okay.
 
+NOTE check for a surprising bug involving financial amounts:
 61a57f17-2107-42eb-a4a8-b17135e1314f-0
 00:00:15.160 --> 00:00:16.060
-So welcome.
+£1,000,000.
 
 992c692c-e132-45e9-80da-a2287df16dd4-0
 00:00:17.840 --> 00:00:21.587
-OK, so has been as we talked
-about just before. This project
+OK, so has been as we talked of
+£750 per year. This project
 
 992c692c-e132-45e9-80da-a2287df16dd4-1
 00:00:21.587 --> 00:00:25.395
@@ -449,7 +457,7 @@ And we have just been friends
 with my best friend.`;
 
 var expectedOneDriveOutput=`Timespan\tSpeaker\tContent
-00:00:08\t\tRecording.---Okay.---So welcome.---OK, so has been as we talked about just before. This project---is about friendship, and I'd like you just to think about one---of your friends and can you tell me about how you became friends?---About 6 and just moved over from Germany and we just happened to---meet and the first thing he said to me I know English.
+00:00:08\t\tRecording.---Okay.---£1,000,000.---OK, so has been as we talked of £750 per year. This project---is about friendship, and I'd like you just to think about one---of your friends and can you tell me about how you became friends?---About 6 and just moved over from Germany and we just happened to---meet and the first thing he said to me I know English.
 00:00:41\t\tAnd we have just been friends with my best friend.`;
 
 var parseTests=[
