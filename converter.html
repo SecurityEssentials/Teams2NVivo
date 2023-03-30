@@ -219,15 +219,7 @@ function refreshDisplay() {
   <h3><center>Transcript Converter</center></h3>
 
 <div>
-	<p>This service will convert a WebVtt transcript file from Microsoft Teams or Zoom into a formatted text file to import into NVivo</p>
-
-	<p>Choose a file from your computer using Choose file. This should be a text based file with a .vtt extension as downloaded from Teams or Zoom (but preferably not from Microsoft Streams, which doesn't provide speaker information). </p>
- 
-    <p>See <a href="index.html">the main page</a> for full instructions.</p>
-    
-    <p>You may want to enter a time shift value to add to each timestamp (e.g. -10, 1:2:1, or -0:3:4 ), and to filter out phrases of less than 10 characters.
-        Then click Convert and Download to create the converted .txt file</p>
-</div>
+	<p>This service converts a WebVtt transcript from Microsoft Teams or Zoom into NVivo's transcript input format.</p>
 
 <div id="interactions" <p style="border-width:3px; border-style:solid; border-color:#FF0000; padding: 1em;border-radius: 25px;">
 
@@ -237,8 +229,8 @@ function refreshDisplay() {
         
         <label for="source">Select transcript source:</label>
         <select name="source" id="source">
-          <option value="OneDrive">Teams or OneDrive</option>
-          <option value="Teams">Old Teams or Zoom</option>
+          <option value="Teams">Teams Meeting or Zoom</option>
+          <option value="OneDrive">Teams Solo or OneDrive</option>
         </select><br/>
         
         <label for="timeshift">Time shift (advanced):</label>
@@ -260,7 +252,15 @@ function refreshDisplay() {
 
 <p id='wordsDeletedIntro'">Words filtered: <span id="wordsDeleted"/></p>
 <p id="unitTestResult" ></p>
+<h3> Instructions </h3>
+	<p>Choose a file from your computer using Choose file. This should be a text based file with a .vtt extension as downloaded from Teams or Zoom (but preferably not from Microsoft Streams, which doesn't provide speaker information). </p>
+ 
+    <p>See <a href="index.html">the main page</a> for full instructions.</p>
     
+    <p>You may want to enter a time shift value to add to each timestamp (e.g. -10, 1:2:1, or -0:3:4 ), and to filter out phrases of less than 10 characters.
+        Then click Convert and Download to create the converted .txt file</p>
+</div>
+
 <p> If you find a bug in the converter, or want to suggest an improvement, please report it in the <a href="https://github.com/SecurityEssentials/Teams2NVivo/issues">project issue tracker here</a>,
 citing the browser used, the operating system, the issue, and (always, please) a sample of a VTT file that causes the problem&mdash;edited if necessary to preserve privacy. </p>
 
