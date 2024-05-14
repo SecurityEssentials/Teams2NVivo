@@ -18,7 +18,6 @@ These instructions are importing from Teams to Windows NVivo 12. Zoom and Mac us
 
 * The video and transcript appear as entries in due course in the chat (**The transcript may take several hours to produce**)
 
-**Note**: As of May 2024, the latest version of Teams on Mac (and probably PC) by default only produces a transcript without names. To get round this, use the **Web** [version of Teams](https://teams.microsoft.com/v2/), which, bizarrely, still delivers the transcript in the old format.
 
 * <img src="images/TeamsChat.png">
 
