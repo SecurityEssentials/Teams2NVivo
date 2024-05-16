@@ -1,0 +1,57 @@
+<!-- open -a 'Google Chrome' --args -allow-file-access-from-files -->
+<body>
+    <button onclick="gettext()">Get document text</button>
+</body>
+<script src="https://unpkg.com/pizzip@3.1.1/dist/pizzip.js"></script>
+<script src="https://unpkg.com/pizzip@3.1.1/dist/pizzip-utils.js"></script>
+<script>
+function str2xml(str) {
+    if (str.charCodeAt(0) === 65279) {
+        // BOM sequence
+        str = str.substr(1);
+    }
+    return new DOMParser().parseFromString(str, "text/xml");
+}
+
+// Will use https://developer.mozilla.org/en-US/docs/Web/API/FileReader/readAsDataURL
+function loadFile(url, callback) {
+        PizZipUtils.getBinaryContent(url, callback);
+    }
+
+function getParagraphs(content) {
+    const zip = new PizZip(content);
+    const xml = str2xml(zip.files["word/document.xml"].asText());
+    const paragraphsXml = xml.getElementsByTagName("w:p");
+    let fullText = "Speaker\tTimespan\tContent\n";
+
+    // First 3 paras are "Transcript\n 13 March 2024\nXXX started transcription\n
+    for (let i = 3; i < paragraphsXml.length; i++) {
+        const textsXml =
+            paragraphsXml[i].getElementsByTagName("w:t");
+        for (let j = 0, len2 = textsXml.length; j < len2; j++) {
+            const textXml = textsXml[j];
+            if (textXml.childNodes) {
+                fullText += textXml.childNodes[0].nodeValue + (j<2 ? "\t": " ");
+            }
+        }
+        fullText += "\n";
+    }
+    return fullText;
+}
+
+    function gettext() {
+        loadFile(
+            "Example.docx",
+            function (error, content) {
+                if (error) {
+                    throw error;
+                }
+                
+                var text = getParagraphs(content);
+                console.log(text);
+                alert(text);
+            }
+        );
+    }
+</script>
+
