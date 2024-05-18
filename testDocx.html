@@ -25,15 +25,20 @@ function getParagraphs(content) {
     let fullText = "Timespan\tSpeaker\tContent\n";
 
     // First 3 paras are "Transcript\n 13 March 2024\nXXX started transcription\n
-    for (let i = 3; i < paragraphsXml.length; i++) {
-        const textsXml = paragraphsXml[i].getElementsByTagName("w:t");
-        for (let j = 0; j < textsXml.length; j++) {
-            const textXml = textsXml[j < 2 ? 1 - j: j]; // Want timestamp before Speaker
-            if (textXml.childNodes) {
-                fullText += textXml.childNodes[0].nodeValue + (j < 2 ? "\t": " ");
-            }
-        }
-        fullText += "\n";
+    // We'll ignore all short paragraphs anyway.
+    for (let i = 0; i < paragraphsXml.length; i++) {
+        const textsXml = Array.from(paragraphsXml[i].querySelectorAll("t, br"));
+        // Gives br, t (Speaker), t (Timestamp), br  ... followed by content t and br elements.
+        // Want Timestamp\tSpeaker\tContent---Content Content...
+        fullText += (textsXml.length < 5) ? "" :         // Ignore short lines
+            textsXml[2].childNodes[0].nodeValue + "\t"   // Timestamp
+            + textsXml[1].childNodes[0].nodeValue + "\t" // Speaker
+            + textsXml.slice(4).map(                     // Content
+                    node => node.tagName.includes("br")
+                          ? "---" : node.childNodes[0].nodeValue + " ")
+                .join('')
+                .trimEnd() // Don't want last space.
+            + "\n";
     }
     return fullText;
 }
