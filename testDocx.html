@@ -6,9 +6,6 @@
 <script src="https://unpkg.com/pizzip@3.1.1/dist/pizzip-utils.js"></script>
 <script>
     
-    // There was code to strip out an initial .charCodeAt(0) === 65279 in the document.xml, but
-    // these files don't need that.
-    
     // Will use https://developer.mozilla.org/en-US/docs/Web/API/FileReader/readAsDataURL
     function loadFile(url, callback) {
         PizZipUtils.getBinaryContent(url, callback);
@@ -45,8 +42,14 @@
         // is 'word/document.xml', an xml file which contains paragraphs <w:p>,
         // each containing text <w:t> and line end <w:br> elements.
         
+        // There was code to strip out an initial byte order mark(BOM). A BOM is a special marker
+        // at the beginning of a file that indicates the byte order of the text data in the file.
+        // .charCodeAt(0) === 65279 , but these files don't need that.
+        
         const zip = new PizZip(content);
-        const xml = new DOMParser().parseFromString(zip.files["word/document.xml"].asText(), "text/xml");
+        const xml = new DOMParser().parseFromString(
+              zip.files["word/document.xml"].asText(),
+              "text/xml");
         return "Timespan\tSpeaker\tContent\n"
             + Array.from(xml.getElementsByTagName("w:p"))
                 .map(transcriptLineFromDocxPara)
