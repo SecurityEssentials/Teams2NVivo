@@ -5,22 +5,18 @@
 <script src="https://unpkg.com/pizzip@3.1.1/dist/pizzip.js"></script>
 <script src="https://unpkg.com/pizzip@3.1.1/dist/pizzip-utils.js"></script>
 <script>
-function str2xml(str) {
-    if (str.charCodeAt(0) === 65279) {
-        // BOM sequence
-        str = str.substr(1);
-    }
-    return new DOMParser().parseFromString(str, "text/xml");
-}
+
+// There was code to strip out an initial .charCodeAt(0) === 65279 in the document.xml, but
+// these files don't need that.
 
 // Will use https://developer.mozilla.org/en-US/docs/Web/API/FileReader/readAsDataURL
 function loadFile(url, callback) {
         PizZipUtils.getBinaryContent(url, callback);
     }
 
-function getParagraphs(content) {
+function transcriptFromDocx(content) {
     const zip = new PizZip(content);
-    const xml = str2xml(zip.files["word/document.xml"].asText());
+    const xml = new DOMParser().parseFromString(zip.files["word/document.xml"].asText(), "text/xml");
     const paragraphsXml = xml.getElementsByTagName("w:p");
     let fullText = "Timespan\tSpeaker\tContent\n";
 
@@ -31,11 +27,11 @@ function getParagraphs(content) {
         // Gives br, t (Speaker), t (Timestamp), br  ... followed by content t and br elements.
         // Want Timestamp\tSpeaker\tContent---Content Content...
         fullText += (textsXml.length < 5) ? "" :         // Ignore short lines
-            textsXml[2].childNodes[0].nodeValue + "\t"   // Timestamp
-            + textsXml[1].childNodes[0].nodeValue + "\t" // Speaker
+            textsXml[2].textContent + "\t"   // Timestamp
+            + textsXml[1].textContent + "\t" // Speaker
             + textsXml.slice(4).map(                     // Content
                     node => node.tagName.includes("br")
-                          ? "---" : node.childNodes[0].nodeValue + " ")
+                          ? "---" : node.textContent + " ")
                 .join('')
                 .trimEnd() // Don't want last space.
             + "\n";
@@ -51,7 +47,7 @@ function getParagraphs(content) {
                     throw error;
                 }
                 
-                var text = getParagraphs(content);
+                var text = transcriptFromDocx(content);
                 console.log(text);
                 alert(text);
             }
