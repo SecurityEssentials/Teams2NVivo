@@ -13,16 +13,18 @@
     function loadFile(url, callback) {
         PizZipUtils.getBinaryContent(url, callback);
     }
-    
     // First 3 paras are "Transcript\n 13 March 2024\nXXX started transcription\n
-    // We'll ignore all short paragraphs anyway.
+    // So we ignore all short paragraphs.
     
     function transcriptLineFromDocxPara(para) {
         // Answers the NVivo transcript line from the given <w:p> document element.
+        // Else empty string if it is too short for a transcript line.
         
         const textsXml = Array.from(para.querySelectorAll("t, br"));
         
-        // Gives br, t (Speaker), t (Timestamp), br  ... followed by content t and br elements.
+        // Gives w:br, w:t (Speaker), w:t (Timestamp), w:br
+        // Followed by content w:t and w:br elements.
+        
         // Want Timestamp\tSpeaker\tContent---Content Content...
         
         return (textsXml.length < 5) ? "" :         // Ignore short lines
@@ -37,7 +39,7 @@
     }
     
     function transcriptFromDocx(content) {
-        // Answers the NVivo transcript from the given Docx content.
+        // Answers the NVivo transcript from the given Docx content as a binary string.
         
         // A Docx file is a zipped archive containing several files, but the one that matters
         // is 'word/document.xml', an xml file which contains paragraphs <w:p>,
