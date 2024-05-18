@@ -5,53 +5,65 @@
 <script src="https://unpkg.com/pizzip@3.1.1/dist/pizzip.js"></script>
 <script src="https://unpkg.com/pizzip@3.1.1/dist/pizzip-utils.js"></script>
 <script>
-
-// There was code to strip out an initial .charCodeAt(0) === 65279 in the document.xml, but
-// these files don't need that.
-
-// Will use https://developer.mozilla.org/en-US/docs/Web/API/FileReader/readAsDataURL
-function loadFile(url, callback) {
+    
+    // There was code to strip out an initial .charCodeAt(0) === 65279 in the document.xml, but
+    // these files don't need that.
+    
+    // Will use https://developer.mozilla.org/en-US/docs/Web/API/FileReader/readAsDataURL
+    function loadFile(url, callback) {
         PizZipUtils.getBinaryContent(url, callback);
     }
-
-function transcriptFromDocx(content) {
-    const zip = new PizZip(content);
-    const xml = new DOMParser().parseFromString(zip.files["word/document.xml"].asText(), "text/xml");
-    const paragraphsXml = xml.getElementsByTagName("w:p");
-    let fullText = "Timespan\tSpeaker\tContent\n";
-
+    
     // First 3 paras are "Transcript\n 13 March 2024\nXXX started transcription\n
     // We'll ignore all short paragraphs anyway.
-    for (let i = 0; i < paragraphsXml.length; i++) {
-        const textsXml = Array.from(paragraphsXml[i].querySelectorAll("t, br"));
+    
+    function transcriptLineFromDocxPara(para) {
+        // Answers the NVivo transcript line from the given <w:p> document element.
+        
+        const textsXml = Array.from(para.querySelectorAll("t, br"));
+        
         // Gives br, t (Speaker), t (Timestamp), br  ... followed by content t and br elements.
         // Want Timestamp\tSpeaker\tContent---Content Content...
-        fullText += (textsXml.length < 5) ? "" :         // Ignore short lines
-            textsXml[2].textContent + "\t"   // Timestamp
-            + textsXml[1].textContent + "\t" // Speaker
-            + textsXml.slice(4).map(                     // Content
+        
+        return (textsXml.length < 5) ? "" :         // Ignore short lines
+            textsXml[2].textContent + "\t"          // Timestamp
+            + textsXml[1].textContent + "\t"        // Speaker
+            + textsXml.slice(4).map(                // Content
                     node => node.tagName.includes("br")
-                          ? "---" : node.textContent + " ")
+                        ? "---" : node.textContent + " ")
                 .join('')
                 .trimEnd() // Don't want last space.
             + "\n";
     }
-    return fullText;
-}
-
+    
+    function transcriptFromDocx(content) {
+        // Answers the NVivo transcript from the given Docx content.
+        
+        // A Docx file is a zipped archive containing several files, but the one that matters
+        // is 'word/document.xml', an xml file which contains paragraphs <w:p>,
+        // each containing text <w:t> and line end <w:br> elements.
+        
+        const zip = new PizZip(content);
+        const xml = new DOMParser().parseFromString(zip.files["word/document.xml"].asText(), "text/xml");
+        return "Timespan\tSpeaker\tContent\n"
+            + Array.from(xml.getElementsByTagName("w:p"))
+                .map(transcriptLineFromDocxPara)
+                .join("");
+    }
+    
     function gettext() {
         loadFile(
-            "Example.docx",
-            function (error, content) {
-                if (error) {
-                    throw error;
-                }
-                
-                var text = transcriptFromDocx(content);
-                console.log(text);
-                alert(text);
-            }
-        );
+             "Example.docx",
+             function (error, content) {
+                 if (error) {
+                     alert( error );
+                 }
+                 
+                 var text = transcriptFromDocx(content);
+                 console.log(text);
+                 alert(text);
+             }
+         );
     }
 </script>
 
