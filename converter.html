@@ -167,7 +167,7 @@ function parseHMS( hmsString ) {
     return (hms.length == 3) ? (hms[0].startsWith('-') ? -1: 1) * (Math.abs(firstNumber) * 3600 + parseInt(hms[1]) * 60 + parseInt(hms[2])) : firstNumber;
 }
 
-function transcriptFromVtt( input, source, timeshift, deleteShort ) { // TODO rename
+function transcriptFromVtt( input, source, timeshift, deleteShort ) { 
     // Does the full conversion of a VTT file, including timeshift and deleting short entries.
     
     const asTabSeparated = convertVttToNvivo( input, source );
@@ -255,7 +255,7 @@ function provideResults( processedFileContents, downloadFilename ) {
 }
 
 function onConvertAndDownloadClicked() {
-    // Called when the user clicks Convert and Download. Creates the processed file. TODO rename.
+    // Called when the user clicks Convert and Download. Creates the processed file.
     
     const filename = document.getElementById("fileName").value;
     const timeshift = parseHMS(document.getElementById("timeshift").value);
