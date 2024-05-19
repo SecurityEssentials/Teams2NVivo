@@ -31,6 +31,12 @@ footer, #wordsDeleted {
 <!-- ****************************************** Javascript Implementation of Conversion **************************************** -->
 
 <script type="text/javascript">
+
+/* See unit tests below for examples of different formats.
+    This depends heavily on Regex: https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Regular_Expressions
+    Use https://regex101.com/ to test regexes, and the Chrome debugger to capture intermediate values in the unit tests.
+    */
+    
 var AllWordsDeleted={};
 
 function convertVttToNvivo( input, source ) {
@@ -40,6 +46,7 @@ function convertVttToNvivo( input, source ) {
     // Remove unwanted crud.
     
     const afterInitialCleaning=(input
+        .replace(/(\r\n|\n\r|\r)/g, '\n') // Change line endings to be internal format
         .replace( /[a-f0-9]+-[a-f0-9]+-[a-f0-9]+-[a-f0-9]*-.*?\n/g,"") // Weird MS Streams and OneDrive ID lines go.
         .replace(/.[-0-9]* --> [0-9]*:[0-9]*:[0-9]*.[0-9]*/g,"   ") // All but the start of each timestamp line goes.
         .replace(/NOTE .*?\n/g,"")  // Removes notes.
@@ -78,23 +85,15 @@ function convertVttToNvivo( input, source ) {
     return tabSeparated.replace(/^\n*/, "Timespan\tSpeaker\tContent\n")
 }
 
-function processInput( input, source, timeshift, deleteShort ){
-    /* Converts the input to NVivo transcript txt format, adding timeshift to each timestamp (may be negative)
-       
+function fixNvivoTranscript( asTabSeparated, timeshift, deleteShort ){
+    /* Fixes the NVivo transcript,
+       Adds timeshift to each timestamp (string, e.g. "-21" or "3:4:5" )
        If deleteShort, then removes short phrases.
-       If source is 'OneDrive', converts as OneDrive, otherwise Teams or Zoom.
-    
-    /* See unit tests below for examples of different formats.
-    This depends heavily on Regex: https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Regular_Expressions
-    Use https://regex101.com/ to test regexes, and the Chrome debugger to capture intermediate values in the unit tests.
-    */
+       */
     
     AllWordsDeleted={};
     var latestTimestamp=timeshift; // Earliest timestamp will be that.
     var currentTimestampIncrement=0;
-    
-    const asTabSeparated = convertVttToNvivo( input, source );
-    //console.log(asTabSeparated);
     
     // And then work on the tab-separated lines, adding headings, concatenating multiple lines, removing short lines, adjusting timestamps.
     return (asTabSeparated
@@ -166,6 +165,14 @@ function parseHMS( hmsString ) {
     return (hms.length == 3) ? (hms[0].startsWith('-') ? -1: 1) * (Math.abs(firstNumber) * 3600 + parseInt(hms[1]) * 60 + parseInt(hms[2])) : firstNumber;
 }
 
+function processInput( input, source, timeshift, deleteShort ) { // TODO rename
+    // Does the full conversion of a VTT file, including timeshift and deleting short entries.
+    
+    const asTabSeparated = convertVttToNvivo( input, source );
+    //console.log(asTabSeparated);
+    return fixNvivoTranscript( asTabSeparated, timeshift, deleteShort )
+}
+
 // ****************************************** Javascript User Interface ****************************************
 
 var ChosenFileBlob;
@@ -180,35 +187,50 @@ function fileChosenEvent(event){
     refreshDisplay();
   };
   
-function cleanVTT() {
-    // Called when the user clicks Convert and Download. Creates the processed file.
-    
-    var reader = new FileReader();
-	reader.onload = function() {
-        var input = reader.result.replace(/(\r\n|\n\r|\r)/g, '\n');
-        var filename = document.getElementById("fileName").value;
-        var timeshift = parseHMS(document.getElementById("timeshift").value);
-        var deleteShort = document.getElementById("deleteShort").checked;
-        var source = document.getElementById("source").value;
-
-        var processedFileContents = processInput( input, source, timeshift, deleteShort );
-        document.getElementById("wordsDeleted").innerHTML = Object.keys(AllWordsDeleted).join(' '); // Safe, since all non-alphanum filtered out in WordsDeleted().
-        //document.getElementById("wordsDeletedIntro").style.display = AllWordsDeleted.size > 0 ? 'compact' : 'none'; // Dunno why this doesn't work.
+function downloadResult( processedFileContents, filename  ) {
+        // Causes a file download to the user, name filename, content processedFileContents
         
-        // Destination filename has extension .txt
-        filename = filename.replace(/.vtt$/i, ".txt");
-     
-        // Creates an invisible element that, on click, downloads the result as that file.
-        var element = document.createElement('a');
-        element.setAttribute('href', 'data:text/plain;charset=utf-8,' + encodeURIComponent(processedFileContents));
-        element.setAttribute('download', filename);
-        element.style.display = 'none';
-        document.body.appendChild(element);
-        element.click();
-        document.body.removeChild(element);
-        };
 
-	reader.readAsText(ChosenFileBlob);
+}
+
+function provideResults( processedFileContents, downloadFilename ) {
+    // Called after conversion, to update the display and download the NVivo transcript
+    // Download filename should have extension .txt
+    
+    document.getElementById("wordsDeleted").innerHTML = Object.keys(AllWordsDeleted).join(' '); // Safe, since all non-alphanum filtered out in WordsDeleted().
+        
+    // Creates an invisible element that, on click, downloads the result as that file.
+    var element = document.createElement('a');
+    element.setAttribute('href', 'data:text/plain;charset=utf-8,' + encodeURIComponent(processedFileContents));
+    element.setAttribute('download', downloadFilename);
+    element.style.display = 'none';
+    document.body.appendChild(element);
+    //  And clicks it:
+    element.click();
+    document.body.removeChild(element);
+}
+
+function cleanVTT() {
+    // Called when the user clicks Convert and Download. Creates the processed file. TODO rename.
+    
+    const filename = document.getElementById("fileName").value;
+    const timeshift = parseHMS(document.getElementById("timeshift").value);
+    const deleteShort = document.getElementById("deleteShort").checked;
+    const source = document.getElementById("source").value;
+        
+    const reader = new FileReader();
+    var processedFileContents;
+    
+    if (filename.match(/.docx$/i)) {
+    } else {
+        reader.onload = function() {
+                processedFileContents = processInput( reader.result, source, timeshift, deleteShort );
+                provideResults( processedFileContents, filename.replace(/.vtt$/i, ".txt"))
+            };
+
+        reader.readAsText(ChosenFileBlob);
+    }
+
 }
 
 function refreshDisplay() {
@@ -233,10 +255,10 @@ function refreshDisplay() {
 <div id="interactions" <p style="border-width:3px; border-style:solid; border-color:#FF0000; padding: 1em;border-radius: 25px;">
 
 	<form name="data">
-		<input type="file" id="myFile" single size="50" accept=".vtt" onchange="fileChosenEvent(event)">
+		<input type="file" id="myFile" size="50" accept=".vtt,.docx" onchange="fileChosenEvent(event)">
 		<input type="hidden" id="fileName" /><br/>
         
-        <label for="source">Select transcript source:</label>
+        <label for="source">Select transcript source (if VTT):</label>
         <select name="source" id="source">
           <option value="Teams">Teams Meeting or Zoom</option>
           <option value="OneDrive">Teams Solo or OneDrive</option>
@@ -259,7 +281,7 @@ function refreshDisplay() {
 		</textarea>	
 </div>
 
-<p id='wordsDeletedIntro'">Words filtered: <span id="wordsDeleted"/></p>
+<p id='wordsDeletedIntro'>Words filtered: <span id="wordsDeleted"/></p>
 <p id="unitTestResult" ></p>
 <h3> Instructions </h3>
 	<p>Choose a file from your computer using Choose file. This should be a text based file with a .vtt extension as downloaded from Teams or Zoom (but preferably not from Microsoft Streams, which doesn't provide speaker information). </p>
