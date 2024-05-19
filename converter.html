@@ -30,6 +30,8 @@ footer, #wordsDeleted {
 
 <!-- ****************************************** Javascript Implementation of Conversion **************************************** -->
 
+<script src="https://unpkg.com/pizzip@3.1.1/dist/pizzip.js"></script>
+<script src="https://unpkg.com/pizzip@3.1.1/dist/pizzip-utils.js"></script>
 <script type="text/javascript">
 
 /* See unit tests below for examples of different formats.
@@ -173,6 +175,54 @@ function processInput( input, source, timeshift, deleteShort ) { // TODO rename
     return fixNvivoTranscript( asTabSeparated, timeshift, deleteShort )
 }
 
+// ****************************************** Parsing DOCX files ****************************************
+
+    // First 3 paras are "Transcript\n 13 March 2024\nXXX started transcription\n
+    // So we ignore all short paragraphs.
+    
+    function transcriptLineFromDocxPara(para) {
+        // Answers the NVivo transcript line from the given <w:p> document element.
+        // Else empty string if it is too short for a transcript line.
+        
+        const textsXml = Array.from(para.querySelectorAll("t, br"));
+        
+        // Gives w:br, w:t (Speaker), w:t (Timestamp), w:br
+        // Followed by content w:t and w:br elements.
+        
+        // Want Timestamp\tSpeaker\tContent---Content Content...
+        
+        return (textsXml.length < 5) ? "" :         // Ignore short lines
+            textsXml[2].textContent + "\t"          // Timestamp
+            + textsXml[1].textContent + "\t"        // Speaker
+            + textsXml.slice(4).map(                // Content
+                    node => node.tagName.includes("br")
+                        ? "---" : node.textContent + " ")
+                .join('')
+                .trimEnd() // Don't want last space.
+            + "\n";
+    }
+    
+    function transcriptFromDocx(content) {
+        // Answers the NVivo transcript from the given Docx content as a binary string.
+        
+        // A Docx file is a zipped archive containing several files, but the one that matters
+        // is 'word/document.xml', an xml file which contains paragraphs <w:p>,
+        // each containing text <w:t> and line end <w:br> elements.
+        
+        // There was code to strip out an initial byte order mark(BOM). A BOM is a special marker
+        // at the beginning of a file that indicates the byte order of the text data in the file.
+        // .charCodeAt(0) === 65279 , but these files don't need that.
+        
+        const zip = new PizZip(content);
+        const xml = new DOMParser().parseFromString(
+              zip.files["word/document.xml"].asText(),
+              "text/xml");
+        return "Timespan\tSpeaker\tContent\n"
+            + Array.from(xml.getElementsByTagName("w:p"))
+                .map(transcriptLineFromDocxPara)
+                .join("");
+    }
+
 // ****************************************** Javascript User Interface ****************************************
 
 var ChosenFileBlob;
@@ -186,12 +236,6 @@ function fileChosenEvent(event){
     document.getElementById("timeshift").value="0";
     refreshDisplay();
   };
-  
-function downloadResult( processedFileContents, filename  ) {
-        // Causes a file download to the user, name filename, content processedFileContents
-        
-
-}
 
 function provideResults( processedFileContents, downloadFilename ) {
     // Called after conversion, to update the display and download the NVivo transcript
@@ -222,6 +266,16 @@ function cleanVTT() {
     var processedFileContents;
     
     if (filename.match(/.docx$/i)) {
+        reader.onload = function() {
+            // reader.result is a base 64-encoded data URL
+            PizZipUtils.getBinaryContent(reader.result, (error, content) => {
+                if (error) alert( error );
+                const nvivoTranscript = transcriptFromDocx(content);
+                const processedTranscript = fixNvivoTranscript( nvivoTranscript, timeshift, deleteShort );
+                provideResults( processedTranscript, filename.replace(/.docx$/i, ".txt"))
+            });
+        }
+        reader.readAsDataURL(ChosenFileBlob);
     } else {
         reader.onload = function() {
                 processedFileContents = processInput( reader.result, source, timeshift, deleteShort );
