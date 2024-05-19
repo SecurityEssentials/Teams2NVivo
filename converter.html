@@ -167,7 +167,7 @@ function parseHMS( hmsString ) {
     return (hms.length == 3) ? (hms[0].startsWith('-') ? -1: 1) * (Math.abs(firstNumber) * 3600 + parseInt(hms[1]) * 60 + parseInt(hms[2])) : firstNumber;
 }
 
-function processInput( input, source, timeshift, deleteShort ) { // TODO rename
+function transcriptFromVtt( input, source, timeshift, deleteShort ) { // TODO rename
     // Does the full conversion of a VTT file, including timeshift and deleting short entries.
     
     const asTabSeparated = convertVttToNvivo( input, source );
@@ -226,7 +226,7 @@ function processInput( input, source, timeshift, deleteShort ) { // TODO rename
 // ****************************************** Javascript User Interface ****************************************
 
 var ChosenFileBlob;
-function fileChosenEvent(event){
+function onFileChosen(event){
     // Called when the user chooses a file
     
 	var input = event.target;
@@ -254,7 +254,7 @@ function provideResults( processedFileContents, downloadFilename ) {
     document.body.removeChild(element);
 }
 
-function cleanVTT() {
+function onConvertAndDownloadClicked() {
     // Called when the user clicks Convert and Download. Creates the processed file. TODO rename.
     
     const filename = document.getElementById("fileName").value;
@@ -278,7 +278,7 @@ function cleanVTT() {
         reader.readAsDataURL(ChosenFileBlob);
     } else {
         reader.onload = function() {
-                processedFileContents = processInput( reader.result, source, timeshift, deleteShort );
+                processedFileContents = transcriptFromVtt( reader.result, source, timeshift, deleteShort );
                 provideResults( processedFileContents, filename.replace(/.vtt$/i, ".txt"))
             };
 
@@ -309,7 +309,7 @@ function refreshDisplay() {
 <div id="interactions" <p style="border-width:3px; border-style:solid; border-color:#FF0000; padding: 1em;border-radius: 25px;">
 
 	<form name="data">
-		<input type="file" id="myFile" size="50" accept=".vtt,.docx" onchange="fileChosenEvent(event)">
+		<input type="file" id="myFile" size="50" accept=".vtt,.docx" onchange="onFileChosen(event)">
 		<input type="hidden" id="fileName" /><br/>
         
         <label for="source">Select transcript source (if VTT):</label>
@@ -318,13 +318,13 @@ function refreshDisplay() {
           <option value="OneDrive">Teams Solo or OneDrive</option>
         </select><br/>
         
-        <label for="timeshift">Time shift (advanced):</label>
+        <label for="timeshift">Time shift:</label>
         <input type="text" id="timeshift" name="timeshift" value=0 onChange="refreshDisplay()"><br/>
         
-        <label for="deleteShort">Filter out short phrases (advanced):</label>
+        <label for="deleteShort">Filter out short phrases:</label>
         <input type="checkbox" id="deleteShort" name="deleteShort" value=false><br/>
         
-		<input type="button" id="doConvert" onclick="cleanVTT();" disabled value="Convert and Download"/>
+		<input type="button" id="doConvert" onclick="onConvertAndDownloadClicked();" disabled value="Convert and Download"/>
 	</form>
 </div>
 
@@ -338,7 +338,7 @@ function refreshDisplay() {
 <p id='wordsDeletedIntro'>Words filtered: <span id="wordsDeleted"/></p>
 <p id="unitTestResult" ></p>
 <h3> Instructions </h3>
-	<p>Choose a file from your computer using Choose file. This should be a text based file with a .vtt extension as downloaded from Teams or Zoom (but preferably not from Microsoft Streams, which doesn't provide speaker information). </p>
+	<p>Choose a file from your computer using Choose file. This should be either a text based file with a .vtt extension as downloaded from Teams or Zoom, or a Microsoft Word DOCX file from Microsoft Teams/Streams</p>
  
     <p>See <a href="index.html">the main page</a> for full instructions.</p>
     
@@ -347,13 +347,13 @@ function refreshDisplay() {
 </div>
 
 <p> If you find a bug in the converter, or want to suggest an improvement, please report it in the <a href="https://github.com/SecurityEssentials/Teams2NVivo/issues">project issue tracker here</a>,
-citing the browser used, the operating system, the issue, and (always, please) a sample of a VTT file that causes the problem&mdash;edited if necessary to preserve privacy. </p>
+citing the browser used, the operating system, the issue, and (always, please) a sample of a VTT/DOCX file that causes the problem&mdash;edited if necessary to preserve privacy. </p>
 
 <!-- Footer with copyright etc. -->
 
 <footer id="footer">
 
-<p>Copyright &copy;2022 Charles Weir <br/>
+<p>Copyright &copy;2024 Charles Weir <br/>
 Portions Copyright &copy;2020 Tim Ellis</p>
 
 <p>Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -585,7 +585,7 @@ var tests=  [[testInput,         'Teams',    0,  false, expectedNonDeleteShortOu
              [testOneDriveInput, 'OneDrive', 0,  false, expectedOneDriveOutput,        '',       "OneDrive conversion"]
             ];
 for (test of tests) {
-    foundOutput = processInput(test[0], test[1], test[2], test[3]);
+    foundOutput = transcriptFromVtt(test[0], test[1], test[2], test[3]);
     foundWordsDeleted=Object.keys(AllWordsDeleted).join(' ');
     if (foundOutput !== test[4]) {
         document.getElementById("unitTestResult").innerHTML = "Self test [" + test[6] + "] failed: " + findError( foundOutput, test[4] );
