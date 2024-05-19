@@ -12,7 +12,7 @@ This utility allows you to use these transcripts with [NVivo](https://www.qsrint
 
 ## Instructions
 
-These instructions are importing from Teams to Windows NVivo 12. Zoom and Mac users may need to adjust them for your own situation (and yes, the converter supports Zoom transcripts)
+These instructions are importing from Teams to Windows NVivo 12. Zoom and Mac users may need to adjust them for your own situation (and yes, the converter supports Zoom VTT file transcripts)
 
 * Record your interview in Teams, creating a transcript 
 
@@ -27,11 +27,11 @@ These instructions are importing from Teams to Windows NVivo 12. Zoom and Mac us
 
 * import the M4A audio or MP4 video into NVivo - see [here](https://help-nv.qsrinternational.com/12/win/v12.1.108-d3ea61/Content/files/audio-and-videos.htm)
 
-* On the transcript in the chat, click *... Download as .vtt*    **Note:** You could also download a VTT transcript from Microsoft Stream---but that version doesn't have speaker names.  
+* Download the DOCX transcript from Microsoft Streams. 
 
-* Use the [converter page here](converter.html) to convert that .vtt file to NVivo transcript format (whose file extension is .txt).
+* Use the [converter page here](converter.html) to convert that .docx file to NVivo transcript format (whose file extension is .txt).
     
-* Import that transcript into NVivo by opening the recording and clicking *Edit*, then *Import rows*. Use the options *One transcript row for each tab-delimited line*, *File includes header row*, and manually set the obvious field mappings as shown below (details blanked for privacy). There's more information [here](https://help-nv.qsrinternational.com/12/win/v12.1.108-d3ea61/Content/files/import-audio-video-transcripts.htm#Import_a_transcript):
+* Import that transcript from your download folder into NVivo by opening the recording and clicking *Edit*, then *Import rows*. Use the options *One transcript row for each tab-delimited line*, *File includes header row*, and manually set the obvious field mappings as shown below (details blanked for privacy). There's more information [here](https://help-nv.qsrinternational.com/12/win/v12.1.108-d3ea61/Content/files/import-audio-video-transcripts.htm#Import_a_transcript):
 
 * <img src="images/NVivoImport.png">
 
@@ -48,7 +48,7 @@ These instructions are importing from Teams to Windows NVivo 12. Zoom and Mac us
 Sometimes (usually?) the timings on the transcript are a few seconds different from those in the recording. NVivo doesn't seem to have an easy way to correct that, so we've implemented one in the script here. 
 
 To fix the timestamps, before doing the conversion, 
-* Open the VTT transcript file in a text editor, and the M4A file in a normal viewer. 
+* Open the transcript file in an editor, and the M4A file in a normal viewer. 
 
 * Find a statement that’s identifiable in both (maybe the first thing said) and note the timings T<sub>vtt</sub> and T<sub>m4a</sub> for that statement. 
 
