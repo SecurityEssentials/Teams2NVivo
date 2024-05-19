@@ -294,7 +294,7 @@ function onConvertAndDownloadClicked() {
 function refreshDisplay() {
     // Disables the Convert and Download button if there's no input file or the timeshift is invalid.
     document.getElementById("doConvert").disabled = !
-        (document.getElementById("timeshift").value.match( /^-?(\d+|\d+:\d+:\d+)$/ ) && // Empty, or 1, -1, 1:1:1, -1:1:1
+        (document.getElementById("timeshift").value.match( /^-?(\d+|\d+:\d+|\d+:\d+:\d+)$/ ) && // Empty, or 1, -1, 1:1:1, -1:1:1
         document.getElementById("fileName").value.length != 0);
     }
     
