@@ -33,22 +33,13 @@ footer, #wordsDeleted {
 <script type="text/javascript">
 var AllWordsDeleted={};
 
-function processInput( input, source, timeshift, deleteShort ){
-    /* Does the conversion, adding timeshift seconds to each timestamp (may be negative)
-       If deleteShort, then removes short phrases.
-       If source is 'OneDrive', converts as OneDrive, otherwise Teams or Zoom.
+function convertVttToNvivo( input, source ) {
+    // Converts the input (string, vtt format) to NVivo transcript txt format
+    // If source is 'OneDrive', converts as OneDrive, otherwise Teams or Zoom.
     
-    /* See unit tests below for examples of different formats.
-    This depends heavily on Regex: https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Regular_Expressions
-    Use https://regex101.com/ to test regexes, and the Chrome debugger to capture intermediate values in the unit tests.
-    */
+    // Remove unwanted crud.
     
-    AllWordsDeleted={};
-    var latestTimestamp=timeshift; // Earliest timestamp will be that.
-    var currentTimestampIncrement=0;
-    
-   // Initial cleaning for all formats. Remove unwanted crud.
-    var afterInitialCleaning=(input
+    const afterInitialCleaning=(input
         .replace( /[a-f0-9]+-[a-f0-9]+-[a-f0-9]+-[a-f0-9]*-.*?\n/g,"") // Weird MS Streams and OneDrive ID lines go.
         .replace(/.[-0-9]* --> [0-9]*:[0-9]*:[0-9]*.[0-9]*/g,"   ") // All but the start of each timestamp line goes.
         .replace(/NOTE .*?\n/g,"")  // Removes notes.
@@ -56,7 +47,7 @@ function processInput( input, source, timeshift, deleteShort ){
         );
         
     // Now convert to tab separated. Depends on source selected by user:
-    var asTabSeparated= (source==='Teams') ?
+    const tabSeparated =(source==='Teams') ?
     
         // Source is Old Teams or Zoom:
         (afterInitialCleaning
@@ -83,13 +74,31 @@ function processInput( input, source, timeshift, deleteShort ){
         // Compose the pairs of lines. Any non-timestamp line is the second of the pair:
         .replace(/(?<line1>\d\d:\d\d:\d\d\t\t.*)\n(?<line2>(?!\d\d:\d\d:\d\d\t?)\S.*)/g, "$<line1> $<line2>" )
         );
-    //console.log(afterInitialCleaning)
+        
+    return tabSeparated.replace(/^\n*/, "Timespan\tSpeaker\tContent\n")
+}
+
+function processInput( input, source, timeshift, deleteShort ){
+    /* Converts the input to NVivo transcript txt format, adding timeshift to each timestamp (may be negative)
+       
+       If deleteShort, then removes short phrases.
+       If source is 'OneDrive', converts as OneDrive, otherwise Teams or Zoom.
+    
+    /* See unit tests below for examples of different formats.
+    This depends heavily on Regex: https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Regular_Expressions
+    Use https://regex101.com/ to test regexes, and the Chrome debugger to capture intermediate values in the unit tests.
+    */
+    
+    AllWordsDeleted={};
+    var latestTimestamp=timeshift; // Earliest timestamp will be that.
+    var currentTimestampIncrement=0;
+    
+    const asTabSeparated = convertVttToNvivo( input, source );
     //console.log(asTabSeparated);
     
     // And then work on the tab-separated lines, adding headings, concatenating multiple lines, removing short lines, adjusting timestamps.
     return (asTabSeparated
         // Take out initial blank lines, and replace with column headings:
-        .replace(/^\n*/, "Timespan\tSpeaker\tContent\n")
         
         /* Now look for short interjections (10 chars or less) and remove them: */
         .replace(/(?<time>-?\d\d?:\d\d?:\d\d)\t(?<speaker>.*?)\t(?<text>[\S ]{0,10}?)\n/g, (s) => {
