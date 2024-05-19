@@ -83,13 +83,14 @@ function convertVttToNvivo( input, source ) {
         // Compose the pairs of lines. Any non-timestamp line is the second of the pair:
         .replace(/(?<line1>\d\d:\d\d:\d\d\t\t.*)\n(?<line2>(?!\d\d:\d\d:\d\d\t?)\S.*)/g, "$<line1> $<line2>" )
         );
-        
+    
+    // Take out initial blank lines, and replace with column headings:
     return tabSeparated.replace(/^\n*/, "Timespan\tSpeaker\tContent\n")
 }
 
 function fixNvivoTranscript( asTabSeparated, timeshift, deleteShort ){
     /* Fixes the NVivo transcript,
-       Adds timeshift to each timestamp (string, e.g. "-21" or "3:4:5" )
+       Adds timeshift (integer) seconds to each timestamp
        If deleteShort, then removes short phrases.
        */
     
@@ -99,10 +100,9 @@ function fixNvivoTranscript( asTabSeparated, timeshift, deleteShort ){
     
     // And then work on the tab-separated lines, adding headings, concatenating multiple lines, removing short lines, adjusting timestamps.
     return (asTabSeparated
-        // Take out initial blank lines, and replace with column headings:
-        
+
         /* Now look for short interjections (10 chars or less) and remove them: */
-        .replace(/(?<time>-?\d\d?:\d\d?:\d\d)\t(?<speaker>.*?)\t(?<text>[\S ]{0,10}?)\n/g, (s) => {
+        .replace(/(?<time>(?:-?\d\d?:)?\d\d?:\d\d)\t(?<speaker>.*?)\t(?<text>[\S ]{0,10}?)\n/g, (s) => {
             if (deleteShort) {
                 wordsDeleted( s );
                 return "";
@@ -130,7 +130,7 @@ function fixNvivoTranscript( asTabSeparated, timeshift, deleteShort ){
         // And shift all the timestamps, checking for monotonicly increasing timestamps. If we don't find them, we use the previous timestamp,
         // and add .1, .2 etc., until the timestamp does increase.
         
-        .replace(/\d\d?:\d\d?:-?\d\d?\t/g, (e) => {
+        .replace(/(?:\d\d?:)?\d\d?:-?\d\d?\t/g, (e) => { //todo add \n
             let seconds = parseHMS(e);
             seconds += timeshift;
             seconds=Math.max(seconds,latestTimestamp);
@@ -163,8 +163,12 @@ function wordsDeleted(s) {
 function parseHMS( hmsString ) {
     // Parses a signed hour:minute:seconds string. E.g. -1:1:1 or -224, returning seconds.
     let hms=hmsString.split(':');
-    let firstNumber=parseInt(hms[0]);
-    return (hms.length == 3) ? (hms[0].startsWith('-') ? -1: 1) * (Math.abs(firstNumber) * 3600 + parseInt(hms[1]) * 60 + parseInt(hms[2])) : firstNumber;
+    let firstNumber=Math.abs(parseInt(hms[0]));
+    let sign = hms[0].startsWith('-') ? -1: 1;
+    return sign * (
+        (hms.length == 3) ? firstNumber * 3600 + parseInt(hms[1]) * 60 + parseInt(hms[2]):
+        (hms.length == 2) ? firstNumber * 60 + parseInt(hms[1]) :
+        firstNumber);
 }
 
 function transcriptFromVtt( input, source, timeshift, deleteShort ) { 
@@ -304,7 +308,7 @@ function refreshDisplay() {
   <h3><center>Transcript Converter</center></h3>
 
 <div>
-	<p>This service converts a WebVtt transcript from Microsoft Teams or Zoom into NVivo's transcript input format.</p>
+	<p>This service converts a WebVtt or Word Docx transcript from Microsoft Teams or Zoom into NVivo's transcript input format.</p>
 
 <div id="interactions" <p style="border-width:3px; border-style:solid; border-color:#FF0000; padding: 1em;border-radius: 25px;">
 
@@ -547,6 +551,8 @@ var expectedOneDriveOutput=`Timespan\tSpeaker\tContent
 var parseTests=[
     ['0', 0],
     ['-2', -2],
+    ['1:30', 90],
+    ['-1:30', -90],
     ['0:0:0', 0],
     ['1:1:1', 3661],
     ['-1:1:1', -3661],
@@ -597,6 +603,19 @@ for (test of tests) {
         break;
         }
     }
+    
+// And a test for Word timeshift.
+const unprocessed=`Timespan\tSpeaker\tContent
+0:19\tFred\tGrunt.
+0:31\tJim\tAnd I should say, you know, this is. ---One-of-a-kind of wave of really interesting books that are  gonna  be published in the coming years.
+`;
+const expectedResult=`Timespan\tSpeaker\tContent
+00:00:41\tJim\tAnd I should say, you know, this is. ---One-of-a-kind of wave of really interesting books that are  gonna  be published in the coming years.
+`;
+const result=fixNvivoTranscript( unprocessed, 10, true );
+if (result !== expectedResult) {
+    document.getElementById("unitTestResult").innerHTML = "Self test word timeshift failed.";
+}
 </script>
 
 <!-- ************************************ Google Analytics ****************************** -->
