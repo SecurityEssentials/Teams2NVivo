@@ -101,8 +101,8 @@ function fixNvivoTranscript( asTabSeparated, timeshift, deleteShort ){
     // And then work on the tab-separated lines, adding headings, concatenating multiple lines, removing short lines, adjusting timestamps.
     return (asTabSeparated
 
-        /* Now look for short interjections (10 chars or less) and remove them: */
-        .replace(/(?<time>(?:-?\d\d?:)?\d\d?:\d\d)\t(?<speaker>.*?)\t(?<text>[\S ]{0,12}?)\n/g, (s) => {
+        /* Now look for short interjections (12 chars or less) and remove them, even where there are several in sequence: */
+        .replace(/(?<time>(?:-?\d\d?:)?\d\d?:\d\d)\t(?<speaker>.*?)\t(?<text>([\S ]{0,12})(---[\S ]{0,12})*?)\n/g, (s) => {
             if (deleteShort) {
                 wordsDeleted( s );
                 return "";
@@ -604,9 +604,9 @@ for (test of tests) {
         }
     }
     
-// And a test for Word timeshift.
+// And a test for Word timeshift and short line deletion.
 const unprocessed=`Timespan\tSpeaker\tContent
-0:19\tFred\tGrunt.
+0:19\tFred\tGrunt---Grunt---Grunt
 0:31\tJim\tAnd I should say, you know, this is. ---One-of-a-kind of wave of really interesting books that are  gonna  be published in the coming years.
 `;
 const expectedResult=`Timespan\tSpeaker\tContent
