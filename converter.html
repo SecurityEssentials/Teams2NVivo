@@ -102,7 +102,7 @@ function fixNvivoTranscript( asTabSeparated, timeshift, deleteShort ){
     return (asTabSeparated
 
         /* Now look for short interjections (10 chars or less) and remove them: */
-        .replace(/(?<time>(?:-?\d\d?:)?\d\d?:\d\d)\t(?<speaker>.*?)\t(?<text>[\S ]{0,10}?)\n/g, (s) => {
+        .replace(/(?<time>(?:-?\d\d?:)?\d\d?:\d\d)\t(?<speaker>.*?)\t(?<text>[\S ]{0,12}?)\n/g, (s) => {
             if (deleteShort) {
                 wordsDeleted( s );
                 return "";
